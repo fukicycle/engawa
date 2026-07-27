@@ -85,24 +85,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const joinFamily = async (inviteCode: string) => {
     if (!currentUser || !userProfile) throw new Error("Authentication required");
     
-        // Find family by invite code
-    const familiesRef = ref(database, 'families');
-    const snapshot = await get(familiesRef);
-    let targetFamilyId = '';
+    // Find family by invite code in the dedicated inviteCodes map node
+    const inviteRef = ref(database, `inviteCodes/${inviteCode.trim()}`);
+    const snapshot = await get(inviteRef);
 
-    if (snapshot.exists()) {
-      const familiesData = snapshot.val();
-      for (const fid in familiesData) {
-        if (familiesData[fid].inviteCode === inviteCode.trim()) {
-          targetFamilyId = fid;
-          break;
-        }
-      }
-    }
-
-    if (!targetFamilyId) {
+    if (!snapshot.exists()) {
       throw new Error("正しい招待コードを入力してください");
     }
+
+    const targetFamilyId = snapshot.val() as string;
 
     // Update family members
     const memberRef = ref(database, `families/${targetFamilyId}/members/${currentUser.uid}`);
@@ -135,6 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Save family
     await set(ref(database, `families/${newFamilyId}`), familyData);
+
+    // Save invite code mapping for safe and permission-allowed lookups
+    await set(ref(database, `inviteCodes/${inviteCode}`), newFamilyId);
 
     // Update user profile
     const updatedProfile: UserProfile = {
