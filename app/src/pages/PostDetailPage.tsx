@@ -665,7 +665,7 @@ export const PostDetailPage: React.FC = () => {
                   required
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
+                  className="glass-input rounded-xl px-2.5 py-2.5 text-sm text-wood-900"
                 />
               </div>
 
@@ -676,7 +676,7 @@ export const PostDetailPage: React.FC = () => {
                   required
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
+                  className="glass-input rounded-xl px-2.5 py-2.5 text-sm text-wood-900"
                 />
               </div>
 
@@ -687,7 +687,7 @@ export const PostDetailPage: React.FC = () => {
                     type="time"
                     value={eventStartTime}
                     onChange={(e) => setEventStartTime(e.target.value)}
-                    className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
+                    className="glass-input rounded-xl px-2 py-2.5 text-sm text-center text-wood-900"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -696,7 +696,7 @@ export const PostDetailPage: React.FC = () => {
                     type="time"
                     value={eventEndTime}
                     onChange={(e) => setEventEndTime(e.target.value)}
-                    className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
+                    className="glass-input rounded-xl px-2 py-2.5 text-sm text-center text-wood-900"
                   />
                 </div>
               </div>

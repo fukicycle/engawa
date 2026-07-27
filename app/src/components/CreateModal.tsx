@@ -394,7 +394,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   required
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
+                  className="w-full glass-input rounded-xl px-2.5 py-2.5 text-sm text-wood-900"
                 />
               </div>
 
@@ -405,7 +405,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                     type="time"
                     value={eventStartTime}
                     onChange={(e) => setEventStartTime(e.target.value)}
-                    className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
+                    className="w-full glass-input rounded-xl px-2 py-2.5 text-sm text-center text-wood-900"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -414,7 +414,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                     type="time"
                     value={eventEndTime}
                     onChange={(e) => setEventStartTimeEnd(e.target.value)}
-                    className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
+                    className="w-full glass-input rounded-xl px-2 py-2.5 text-sm text-center text-wood-900"
                   />
                 </div>
               </div>
