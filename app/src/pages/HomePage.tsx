@@ -610,14 +610,21 @@ export const HomePage: React.FC = () => {
 
       </main>
 
+      {/* Floating bottom-right Creation Button */}
+      <button
+        onClick={() => {
+          setCreateModalTab('post'); // default to post
+          setIsCreateOpen(true);
+        }}
+        className="fixed right-5 bottom-24 z-40 w-14 h-14 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-xl shadow-engawa-600/35 border border-white/25 active:scale-95 hover:scale-105 transition-all"
+      >
+        <span className="text-2xl font-bold font-soft mt-0.5">+</span>
+      </button>
+
       {/* Nav bar */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onPlusClick={() => {
-          setCreateModalTab('post');
-          setIsCreateOpen(true);
-        }}
       />
 
       {/* Create Event/Post Modal */}

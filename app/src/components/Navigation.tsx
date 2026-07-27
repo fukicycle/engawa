@@ -1,19 +1,17 @@
 import React from 'react';
-import { HomeIcon, CalendarIcon, UserIcon, PlusIcon } from './Icons';
+import { HomeIcon, CalendarIcon, UserIcon } from './Icons';
 
 interface NavigationProps {
   activeTab: 'home' | 'calendar' | 'settings';
   setActiveTab: (tab: 'home' | 'calendar' | 'settings') => void;
-  onPlusClick: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ 
   activeTab, 
-  setActiveTab,
-  onPlusClick
+  setActiveTab
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/40 backdrop-blur-lg border-t border-white/20 shadow-lg px-6 py-2 flex justify-between items-center max-w-md mx-auto rounded-t-3xl">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/40 backdrop-blur-lg border-t border-white/20 shadow-lg px-8 py-2.5 flex justify-between items-center max-w-md mx-auto rounded-t-3xl">
       {/* Home Tab */}
       <button
         onClick={() => setActiveTab('home')}
@@ -38,17 +36,6 @@ export const Navigation: React.FC<NavigationProps> = ({
       >
         <CalendarIcon size={22} />
         <span className="text-[10px] tracking-wider font-bold">暦</span>
-      </button>
-
-      {/* Integrated Central Plus Button */}
-      <button
-        onClick={onPlusClick}
-        className="flex-1 flex flex-col items-center gap-1 py-1 transition-all active:scale-90"
-        title="作成する"
-      >
-        <div className="w-10 h-10 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow shadow-engawa-600/20">
-          <PlusIcon size={18} />
-        </div>
       </button>
 
       {/* Settings Tab */}
