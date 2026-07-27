@@ -286,7 +286,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
+    <div className="relative h-dvh overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
@@ -303,7 +303,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.14</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.15</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/50 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
