@@ -286,7 +286,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative h-dvh overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
+    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
@@ -303,7 +303,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.23</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.24</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/50 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -341,7 +341,7 @@ export const HomePage: React.FC = () => {
       </header>
 
       {/* MAIN VIEW CONTENT CONTAINER */}
-      <main className="relative z-10 flex-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-170px)] hide-scrollbar">
+      <main className="relative z-10 flex-1 flex flex-col gap-4 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)] hide-scrollbar min-h-0">
         
         {/* SUBVIEW A: HOME (THREADS LIST) */}
         {activeTab === 'home' && (
