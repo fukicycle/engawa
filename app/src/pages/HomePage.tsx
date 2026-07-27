@@ -36,6 +36,8 @@ export const HomePage: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [showNotificationGuide, setShowNotificationGuide] = useState(true);
 
   // Data States
@@ -150,8 +152,8 @@ export const HomePage: React.FC = () => {
   // Calendar Grid Generator
   const renderCalendarGrid = () => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); // Current Month (0-11)
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth(); // Active Month (0-11)
     
     // Days in current month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -195,7 +197,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen pb-24 pt-4 px-4 overflow-hidden max-w-md mx-auto flex flex-col gap-5">
+    <div className="relative h-screen overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
@@ -294,7 +296,12 @@ export const HomePage: React.FC = () => {
                         />
                         <div>
                           <h4 className="text-xs font-extrabold text-engawa-800">{author.name}</h4>
-                          <p className="text-[9px] text-wood-900/40 font-medium">{date}</p>
+                          <p className="text-[9px] text-wood-900/40 font-medium">
+                            {date}
+                            {post.edited && (
+                              <span className="text-wood-900/30 font-bold ml-1 text-[8px] bg-wood-900/5 px-1 py-0.5 rounded-md">編集済</span>
+                            )}
+                          </p>
                         </div>
                       </div>
 
@@ -392,9 +399,23 @@ export const HomePage: React.FC = () => {
             {/* Elegant Calendar Card */}
             <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
-                <h3 className="text-sm font-extrabold tracking-widest text-engawa-800">
-                  {new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                    className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
+                  >
+                    ←
+                  </button>
+                  <h3 className="text-xs font-extrabold tracking-wider text-engawa-800">
+                    {currentDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
+                  </h3>
+                  <button
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                    className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
+                  >
+                    →
+                  </button>
+                </div>
                 <span className="text-[10px] font-bold text-wood-900/40">家族カレンダー</span>
               </div>
 
@@ -417,9 +438,21 @@ export const HomePage: React.FC = () => {
 
             {/* Event Agenda Card for Selected Date */}
             <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
-              <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
-                {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
-              </h3>
+              <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
+                  {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
+                </h3>
+                <button
+                  onClick={() => {
+                    setCreateModalTab('event');
+                    setIsCreateOpen(true);
+                  }}
+                  className="text-[9px] font-bold text-engawa-700 hover:text-white hover:bg-engawa-600 bg-white/50 border border-white/60 px-2.5 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1"
+                >
+                  <span>+</span>
+                  <span>予定を追加</span>
+                </button>
+              </div>
 
               {selectedDateEvents.length === 0 ? (
                 <p className="text-xs text-wood-900/40 font-bold py-4 text-center">この日の予定はありません。</p>
@@ -569,16 +602,28 @@ export const HomePage: React.FC = () => {
 
       </main>
 
+      {/* Floating bottom-right Creation Button */}
+      <button
+        onClick={() => {
+          setCreateModalTab('post'); // default to post
+          setIsCreateOpen(true);
+        }}
+        className="fixed right-5 bottom-24 z-40 w-14 h-14 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-xl shadow-engawa-600/35 border border-white/25 active:scale-95 hover:scale-105 transition-all"
+      >
+        <span className="text-2xl font-bold font-soft mt-0.5">+</span>
+      </button>
+
       {/* Nav bar */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onPlusClick={() => setIsCreateOpen(true)}
       />
 
       {/* Create Event/Post Modal */}
       <CreateModal
         isOpen={isCreateOpen}
+        defaultTab={createModalTab}
+        initialDate={createModalTab === 'event' ? selectedDate : ''}
         onClose={() => setIsCreateOpen(false)}
         onSuccess={() => {
           setIsCreateOpen(false);

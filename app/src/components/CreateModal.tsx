@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ref, push, set, get } from 'firebase/database';
 import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,9 +8,17 @@ interface CreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultTab?: 'post' | 'poll' | 'event';
+  initialDate?: string;
 }
 
-export const CreateModal: React.FC<CreateModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const CreateModal: React.FC<CreateModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  defaultTab = 'post',
+  initialDate = ''
+}) => {
   const { currentUser, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'post' | 'poll' | 'event'>('post');
   const [loading, setLoading] = useState(false);
@@ -30,6 +38,18 @@ export const CreateModal: React.FC<CreateModalProps> = ({ isOpen, onClose, onSuc
   const [eventEndTime, setEventStartTimeEnd] = useState('');
   const [eventDesc, setEventDesc] = useState('');
   const [createLinkedPost, setCreateLinkedPost] = useState(true);
+
+  // Set active tab and prefill date when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+      if (initialDate) {
+        setEventDate(initialDate);
+      } else {
+        setEventDate('');
+      }
+    }
+  }, [isOpen, defaultTab, initialDate]);
 
   if (!isOpen) return null;
 

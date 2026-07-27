@@ -41,6 +41,10 @@ export interface Post {
   // Metadata for replies
   replyCount?: number;
   lastReplyAt?: number;
+
+  // Metadata for editing
+  edited?: boolean;
+  editedAt?: number;
 }
 
 export interface Message {

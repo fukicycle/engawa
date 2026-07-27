@@ -45,8 +45,8 @@ export const PostIcon: React.FC<IconProps> = ({ size = 24, className = '', ...pr
     <rect x="3" y="3" width="18" height="18" rx="2" />
     <line x1="9" y1="3" x2="9" y2="21" />
     <line x1="15" y1="3" x2="15" y2="21" />
-    <line x1="3" y1="9" x2="21" y2="9" />
-    <line x1="3" y1="15" x2="21" y2="15" />
+    <path d="M3 9h18" />
+    <path d="M3 15h18" />
   </svg>
 );
 
@@ -256,7 +256,7 @@ export const CloseIcon: React.FC<IconProps> = ({ size = 24, className = '', ...p
   </svg>
 );
 
-export const LeafIcon: React.FC<IconProps> = ({ size = 24, className = '', ...props }) => (
+export const EditIcon: React.FC<IconProps> = ({ size = 20, className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -264,17 +264,50 @@ export const LeafIcon: React.FC<IconProps> = ({ size = 24, className = '', ...pr
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.5"
+    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
     {...props}
   >
-    {/* A single beautiful maple/oak leaf silhouette */}
-    <path d="M12 2C12 2 9 6 9 9C9 13.5 12 17 12 17C12 17 15 13.5 15 9C15 6 12 2 12 2Z" fill="currentColor" fillOpacity="0.2" />
-    <path d="M12 21V17" />
-    <path d="M12 17C12 17 7 15 6 11" />
-    <path d="M12 14C12 17 17 15 18 11" />
-    <path d="M12 9V17" />
+    {/* Traditional ink brush / quill writing silhouette */}
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z" />
+  </svg>
+);
+
+export const TrashIcon: React.FC<IconProps> = ({ size = 20, className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
+export const LeafIcon: React.FC<IconProps> = ({ size = 24, className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    {...props}
+  >
+    {/* Beautiful, authentic Japanese Maple Leaf (Momiji / 紅葉) SVG path */}
+    <path d="M12 .3c-.1 0-.1.1-.1.1v4.7c-1.1-.5-2.2-.8-3.4-.6l1.4-2.8c.1-.1 0-.2-.1-.2H9.3c-.1 0-.1 0-.1.1L7.5 4.9C6.4 5.1 5.4 5.7 4.6 6.5l1.4-2.7c.1-.1 0-.2-.1-.2h-.5c-.1 0-.1 0-.2.1L1.9 6.4c-.5.9-.8 1.9-.9 3l2.8-1c.1 0 .1-.1.1-.2V7.3c1-.5 2.1-.6 3.1-.3l-3 2.4c-.1.1 0 .2.1.2h.5c.1 0 .1 0 .1-.1l1.9-2.5c.8.2 1.6.7 2.2 1.3l-2.6 1c-.1 0-.1.1-.1.2v.5c0 .1.1.1.1.1l3-1c.4.7.6 1.5.6 2.4l-3.3 1c-.1 0-.1.1-.1.1l.1.5c0 .1.1.1.2.1l3.3-1c-.1 1.1-.6 2.1-1.3 3l-1.9-.8c-.1 0-.1.1-.1.1l.2.5c0 .1.1.1.1.1l3.5-.8c.7 1.1 1.6 1.9 2.8 2.5l-1.5-3.3c0-.1 0-.1-.1-.1l-.5.1c-.1 0-.1.1-.1.2l1.1 3c-1.1.8-2.5 1.2-3.8 1.1l.4.9c0 .1.1.1.2.1h.4c1.6 0 3.1-.6 4.3-1.6l-1-3.2c0-.1 0-.2.1-.2h.4c.1 0 .1.1.2.1l1.5 2.5c.9-.7 1.6-1.6 2-2.7l-2.5-.7c-.1 0-.1-.1-.1-.2v-.4c0-.1.1-.1.2-.1l2.7.2c.4-1 .5-2.1.4-3.2l-2.9.5c-.1 0-.1-.1-.1-.2v-.5c0-.1.1-.1.1-.1l3-.1c.1-1.1-.1-2.2-.6-3.2l-2.5 1.5c-.1.1-.2 0-.2-.1v-.5c0-.1 0-.1.1-.2l2-2c-.7-.9-1.6-1.6-2.6-2l-1.4 2.8c-.1.1-.2 0-.2-.1V3.3c-1.1-.1-2.2 0-3.2.4L12.1.4c0-.1-.1-.1-.1-.1z" />
   </svg>
 );
