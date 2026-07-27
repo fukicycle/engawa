@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ref, onValue, off, push, set, get } from 'firebase/database';
 import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +22,7 @@ const getTitleTextClass = (size: 'small' | 'normal' | 'large') => {
 export const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, userProfile, fontSize, switchFamily } = useAuth();
   
   const [post, setPost] = useState<Post | null>(null);
@@ -211,7 +212,27 @@ export const PostDetailPage: React.FC = () => {
         }
       }
     }
-  }, [postLoading, messages.length]);
+  }, [postLoading, messages.length, location.search, location.hash]);
+
+  // Automatically clear associated in-app notifications when viewing this post detail
+  useEffect(() => {
+    if (!currentUser || !postId) return;
+
+    const notifRef = ref(database, `userNotifications/${currentUser.uid}`);
+    get(notifRef).then(async (snapshot) => {
+      if (snapshot.exists()) {
+        const notifications = snapshot.val();
+        for (const notifId in notifications) {
+          const notif = notifications[notifId];
+          // If this notification links to the currently active postId, and is unread, mark it as read!
+          if (notif.linkPath && notif.linkPath.includes(`/post/${postId}`) && !notif.read) {
+            console.log(`Auto-clearing notification ${notifId} as read since user viewed post ${postId}`);
+            await set(ref(database, `userNotifications/${currentUser.uid}/${notifId}/read`), true);
+          }
+        }
+      }
+    });
+  }, [postId, currentUser?.uid, location.search, location.hash]);
 
   // Prefill event title when "Add to Calendar" form opens
   useEffect(() => {
