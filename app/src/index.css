@@ -68,7 +68,7 @@ input[type="month"] {
   overflow: hidden;
 }
 
-/* 全フォーム要素のサイズ制御 */
+/* 全フォーム要素 of サイズ制御 */
 input, select, textarea {
   overflow-wrap: normal;
   box-sizing: border-box;
@@ -169,51 +169,27 @@ input, select, textarea {
 }
 
 /* 
- * Heavy Glass Drawers (Right side)
- * Uses high 0.72 opacity and intense 20px blur to fully mask underlying text noise!
+ * Solid Wood Drawers (Right side sliding door - Shoji / Hikido style)
+ * Fully opaque wood-100 color prevents 100% of underlying visual overlap noise!
  */
-.glass-drawer {
+.wood-drawer {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-left: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-wood-100);
+  border-left: 1px solid var(--color-wood-300);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.06);
   transform: translateZ(0);
-}
-
-.glass-drawer::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: inherit;
 }
 
 /* 
- * Heavy Glass Drawers (Left side)
- * Uses high 0.72 opacity and intense 20px blur to fully mask underlying text noise!
+ * Solid Wood Drawers (Left side sliding door - Shoji / Hikido style)
+ * Fully opaque wood-100 color prevents 100% of underlying visual overlap noise!
  */
-.glass-drawer-left {
+.wood-drawer-left {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-right: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+  background-color: var(--color-wood-100);
+  border-right: 1px solid var(--color-wood-300);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.06);
   transform: translateZ(0);
-}
-
-.glass-drawer-left::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: inherit;
 }
 
 /* Falling Leaves Animation (Simple & Clean) */
@@ -268,6 +244,18 @@ input, select, textarea {
   to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+/* Right Drawer: Slides smoothly from Right to Left (translateX(100%) -> 0) */
+@keyframes gentleSlideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Left Drawer: Slides smoothly from Left to Right (translateX(-100%) -> 0) */
+@keyframes gentleSlideRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
 .animate-gentleFadeIn {
   animation: gentleFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -278,6 +266,14 @@ input, select, textarea {
 
 .animate-gentleScaleIn {
   animation: gentleScaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gentleSlideLeft {
+  animation: gentleSlideLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gentleSlideRight {
+  animation: gentleSlideRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* 

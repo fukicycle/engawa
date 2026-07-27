@@ -305,7 +305,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.28</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.30</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -808,8 +808,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setIsNotificationDrawerOpen(false)} 
           />
           
-          {/* Sliding Glassmorphic Panel with heavy 20px blur and 0.72 opacity */}
-          <div className="relative z-10 w-full max-w-xs h-full glass-drawer p-5 flex flex-col gap-4 animate-gentleSlideUp">
+          {/* Sliding Solid Wood Panel (Shoji Door style sliding from Right to Left) */}
+          <div className="relative z-10 w-full max-w-xs h-full wood-drawer p-5 flex flex-col gap-4 animate-gentleSlideLeft">
             
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
@@ -915,8 +915,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setIsFamilySwitcherOpen(false)} 
           />
           
-          {/* Sliding Glassmorphic Switcher Panel with heavy 20px blur and 0.72 opacity */}
-          <div className="relative z-10 w-full max-w-[260px] h-full glass-drawer-left p-5 flex flex-col gap-4 animate-gentleSlideUp">
+          {/* Sliding Solid Wood Panel (Shoji Door style sliding from Left to Right) */}
+          <div className="relative z-10 w-full max-w-[260px] h-full wood-drawer-left p-5 flex flex-col gap-4 animate-gentleSlideRight">
             
             {/* Switcher Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
