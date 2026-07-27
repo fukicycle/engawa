@@ -9,16 +9,21 @@ import { CreateModal } from '../components/CreateModal';
 import { 
   HomeIcon, 
   LogOutIcon, 
-  LeafIcon 
+  LeafIcon,
+  BellIcon,
+  CheckIcon
 } from '../components/Icons';
 import type { Post, CalendarEvent, UserProfile, FamilyGroup } from '../types';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, userProfile, logout } = useAuth();
+  const { permission: pushPermission, subscribeUser } = usePushNotifications();
   
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [showNotificationGuide, setShowNotificationGuide] = useState(true);
 
   // Data States
   const [family, setFamily] = useState<FamilyGroup | null>(null);
@@ -213,6 +218,38 @@ export const HomePage: React.FC = () => {
         {/* SUBVIEW A: HOME (THREADS LIST) */}
         {activeTab === 'home' && (
           <div className="flex flex-col gap-4">
+            
+            {/* Dynamic Notification Permission Guide */}
+            {pushPermission === 'default' && showNotificationGuide && (
+              <div className="glass-card rounded-3xl p-5 border border-engawa-500/20 bg-engawa-50/20 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 shrink-0">
+                    <BellIcon size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-engawa-800">通知を有効にしませんか？</h4>
+                    <p className="text-[10px] text-wood-900/60 leading-relaxed mt-1">
+                      家族からの新しい「投稿」や「あなたへの返信」を、アプリを閉じていてもリアルタイムにお届けします。関係のないチャットの通知は届かないので静かです。
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end mt-1">
+                  <button
+                    onClick={() => setShowNotificationGuide(false)}
+                    className="text-[9px] font-bold text-wood-900/40 px-3 py-1.5 rounded-xl hover:bg-wood-900/5"
+                  >
+                    また今度
+                  </button>
+                  <button
+                    onClick={subscribeUser}
+                    className="text-[9px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 px-4 py-1.5 rounded-xl shadow shadow-engawa-600/10"
+                  >
+                    通知を許可する
+                  </button>
+                </div>
+              </div>
+            )}
+
             {posts.length === 0 ? (
               <div className="glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/40">
                 <LeafIcon size={40} className="opacity-30" />
@@ -258,6 +295,31 @@ export const HomePage: React.FC = () => {
                     <p className="text-sm leading-relaxed text-wood-900/80 font-medium break-all whitespace-pre-line">
                       {post.content}
                     </p>
+
+                    {/* Calendar Linked Post Card details */}
+                    {post.type === 'calendar' && post.eventId && (() => {
+                      const linkedEvent = events.find(ev => ev.id === post.eventId);
+                      if (!linkedEvent) return null;
+                      return (
+                        <div className="flex items-center gap-3 p-3 rounded-2xl bg-wood-50/70 border border-wood-200/50 mt-1">
+                          {/* Small Tear-off Japanese Calendar sheet */}
+                          <div className="w-11 h-12 bg-white rounded-lg border border-wood-300 shadow-sm flex flex-col items-center overflow-hidden shrink-0">
+                            <div className="w-full bg-red-500 text-white text-[8px] font-bold py-0.5 text-center tracking-widest">
+                              {linkedEvent.date.split('-')[1]}月
+                            </div>
+                            <div className="text-wood-900 font-extrabold text-base leading-none mt-1">
+                              {parseInt(linkedEvent.date.split('-')[2])}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-xs font-extrabold text-engawa-800 truncate">{linkedEvent.title}</h5>
+                            <p className="text-[9px] text-wood-900/50 font-bold mt-0.5">
+                              {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Poll Special UI */}
                     {post.type === 'poll' && post.pollOptions && (
@@ -396,6 +458,44 @@ export const HomePage: React.FC = () => {
               >
                 <LogOutIcon size={20} />
               </button>
+            </div>
+
+            {/* Notification Settings */}
+            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <div className="text-engawa-600"><BellIcon size={18} /></div>
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">通知の設定</h3>
+              </div>
+
+              <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-wood-900/80">バックグラウンド通知</span>
+                  <span className="text-[10px] text-wood-900/40 font-medium">
+                    {pushPermission === 'granted' 
+                      ? '有効（リアルタイムにお届けします）' 
+                      : pushPermission === 'denied' 
+                        ? 'ブロック中（ブラウザ設定から許可してください）' 
+                        : '未設定（意思を尊重してタップで設定します）'}
+                  </span>
+                </div>
+
+                {pushPermission === 'granted' ? (
+                  <span className="w-6 h-6 rounded-full bg-engawa-500/15 flex items-center justify-center text-engawa-600">
+                    <CheckIcon size={12} />
+                  </span>
+                ) : pushPermission === 'denied' ? (
+                  <span className="text-[9px] font-bold text-red-500 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200/50">
+                    要設定
+                  </span>
+                ) : (
+                  <button
+                    onClick={subscribeUser}
+                    className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 px-3.5 py-1.5 rounded-xl shadow shadow-engawa-600/10 transition-colors"
+                  >
+                    設定する
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Family Members List */}

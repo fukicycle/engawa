@@ -5,7 +5,7 @@ import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon } from '../components/Icons';
-import type { Post, Message, Reaction, UserProfile } from '../types';
+import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
 export const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -13,6 +13,7 @@ export const PostDetailPage: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
   
   const [post, setPost] = useState<Post | null>(null);
+  const [linkedEvent, setLinkedEvent] = useState<CalendarEvent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [familyMembers, setFamilyMembers] = useState<Record<string, UserProfile>>({});
@@ -58,7 +59,18 @@ export const PostDetailPage: React.FC = () => {
     const postRef = ref(database, `posts/${familyId}/${postId}`);
     onValue(postRef, (snapshot) => {
       if (snapshot.exists()) {
-        setPost(snapshot.val() as Post);
+        const postData = snapshot.val() as Post;
+        setPost(postData);
+        
+        // Fetch linked calendar event details if present
+        if (postData.type === 'calendar' && postData.eventId) {
+          const eventRef = ref(database, `calendarEvents/${familyId}/${postData.eventId}`);
+          get(eventRef).then((evSnapshot) => {
+            if (evSnapshot.exists()) {
+              setLinkedEvent(evSnapshot.val() as CalendarEvent);
+            }
+          });
+        }
       } else {
         setPost(null);
       }
@@ -221,6 +233,35 @@ export const PostDetailPage: React.FC = () => {
         </button>
         <span className="text-sm font-extrabold tracking-widest text-engawa-800 font-soft">縁側のやり取り</span>
       </header>
+
+      {/* Calendar Linked Event Banner */}
+      {post.type === 'calendar' && linkedEvent && (
+        <div className="relative z-10 glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex items-center gap-4 bg-gradient-to-r from-wood-100/30 to-white/20">
+          {/* Tear-off traditional calendar sheet */}
+          <div className="w-14 h-16 bg-white rounded-xl border border-wood-300 shadow flex flex-col items-center overflow-hidden shrink-0">
+            <div className="w-full bg-red-500 text-white text-[9px] font-bold py-1 text-center tracking-widest">
+              {linkedEvent.date.split('-')[1]}月
+            </div>
+            <div className="text-wood-900 font-black text-xl leading-none mt-1.5">
+              {parseInt(linkedEvent.date.split('-')[2])}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[8px] font-bold tracking-widest bg-engawa-100 text-engawa-700 px-2.5 py-0.5 rounded-md border border-engawa-500/10">
+              暦（カレンダー）の予定
+            </span>
+            <h3 className="text-sm font-extrabold text-engawa-800 mt-1 truncate">{linkedEvent.title}</h3>
+            <p className="text-[10px] text-wood-900/60 font-bold mt-0.5">
+              時間: {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
+            </p>
+            {linkedEvent.description && (
+              <p className="text-[10px] text-wood-900/50 mt-1.5 pt-1.5 border-t border-wood-900/5 truncate">
+                {linkedEvent.description}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main post box */}
       <div className="relative z-10 glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
