@@ -5,6 +5,7 @@ import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../components/Icons';
+import { Dialog } from '../components/Dialog';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
 export const PostDetailPage: React.FC = () => {
@@ -25,6 +26,13 @@ export const PostDetailPage: React.FC = () => {
   // States for Editing
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+
+  // Dialog States
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogIsConfirm, setDialogIsConfirm] = useState(false);
+  const [dialogOnConfirm, setDialogOnConfirm] = useState<(() => void) | undefined>(undefined);
 
   // States for "Add to Calendar" inline form
   const [isCalendarFormOpen, setIsCalendarFormOpen] = useState(false);
@@ -243,29 +251,34 @@ export const PostDetailPage: React.FC = () => {
 
   const handleDeletePost = async () => {
     if (!currentUser || !userProfile?.familyId || !postId || !post) return;
-    if (!window.confirm("この投稿と関連するやり取りをすべて削除しますか？")) return;
+    
+    setDialogTitle('削除の確認');
+    setDialogMessage('この投稿と、ぶら下がっているすべてのやり取りを削除してもよろしいですか？（連動するカレンダー予定も削除されます）');
+    setDialogIsConfirm(true);
+    setDialogOnConfirm(() => async () => {
+      try {
+        const familyId = userProfile.familyId;
 
-    try {
-      const familyId = userProfile.familyId;
+        // 1. Delete parent post
+        await set(ref(database, `posts/${familyId}/${postId}`), null);
 
-      // 1. Delete parent post
-      await set(ref(database, `posts/${familyId}/${postId}`), null);
+        // 2. Delete messages/replies
+        await set(ref(database, `messages/${postId}`), null);
 
-      // 2. Delete messages/replies
-      await set(ref(database, `messages/${postId}`), null);
+        // 3. Delete reactions
+        await set(ref(database, `reactions/${postId}`), null);
 
-      // 3. Delete reactions
-      await set(ref(database, `reactions/${postId}`), null);
+        // 4. Delete linked calendar event if present
+        if (post.eventId) {
+          await set(ref(database, `calendarEvents/${familyId}/${post.eventId}`), null);
+        }
 
-      // 4. Delete linked calendar event if present
-      if (post.eventId) {
-        await set(ref(database, `calendarEvents/${familyId}/${post.eventId}`), null);
+        navigate('/');
+      } catch (err) {
+        console.error(err);
       }
-
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-    }
+    });
+    setDialogOpen(true);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -746,6 +759,15 @@ export const PostDetailPage: React.FC = () => {
           </button>
         </form>
       </div>
+      {/* Custom Reusable Dialog Modals */}
+      <Dialog
+        isOpen={dialogOpen}
+        title={dialogTitle}
+        message={dialogMessage}
+        isConfirm={dialogIsConfirm}
+        onConfirm={dialogOnConfirm}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { Navigation } from '../components/Navigation';
 import { CreateModal } from '../components/CreateModal';
+import { Dialog } from '../components/Dialog';
 import { 
   HomeIcon, 
   LogOutIcon, 
@@ -39,6 +40,11 @@ export const HomePage: React.FC = () => {
   const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showNotificationGuide, setShowNotificationGuide] = useState(true);
+
+  // Dialog States
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogMessage, setDialogMessage] = useState('');
 
   // Data States
   const [family, setFamily] = useState<FamilyGroup | null>(null);
@@ -143,7 +149,9 @@ export const HomePage: React.FC = () => {
   const handleCopyInviteCode = () => {
     if (!family?.inviteCode) return;
     navigator.clipboard.writeText(family.inviteCode);
-    alert('招待コードをクリップボードにコピーしました！');
+    setDialogTitle('設定');
+    setDialogMessage('招待コードをコピーしました！家族に教えてあげてください。');
+    setDialogOpen(true);
   };
 
   // Calendar Helper: Get events of selected date
@@ -602,21 +610,14 @@ export const HomePage: React.FC = () => {
 
       </main>
 
-      {/* Floating bottom-right Creation Button */}
-      <button
-        onClick={() => {
-          setCreateModalTab('post'); // default to post
-          setIsCreateOpen(true);
-        }}
-        className="fixed right-5 bottom-24 z-40 w-14 h-14 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-xl shadow-engawa-600/35 border border-white/25 active:scale-95 hover:scale-105 transition-all"
-      >
-        <span className="text-2xl font-bold font-soft mt-0.5">+</span>
-      </button>
-
       {/* Nav bar */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        onPlusClick={() => {
+          setCreateModalTab('post');
+          setIsCreateOpen(true);
+        }}
       />
 
       {/* Create Event/Post Modal */}
@@ -629,6 +630,14 @@ export const HomePage: React.FC = () => {
           setIsCreateOpen(false);
           setActiveTab('home'); // go back to threads
         }}
+      />
+
+      {/* Custom Reusable Dialog Modals */}
+      <Dialog
+        isOpen={dialogOpen}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => setDialogOpen(false)}
       />
     </div>
   );
