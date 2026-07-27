@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../components/Icons';
 import { Dialog } from '../components/Dialog';
-import { decryptText } from '../utils/crypto';
+import { encryptText, decryptText } from '../utils/crypto';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
 const getBodyTextClass = (_size: 'small' | 'normal' | 'large') => {
@@ -338,7 +338,7 @@ export const PostDetailPage: React.FC = () => {
       const postRef = ref(database, `posts/${familyId}/${postId}`);
       await set(postRef, {
         ...post,
-        content: editContent.trim(),
+        content: encryptText(editContent.trim()), // Encrypt edited content!
         edited: true,
         editedAt: Date.now()
       });
@@ -410,7 +410,7 @@ export const PostDetailPage: React.FC = () => {
         authorId: currentUser.uid,
         authorName: userProfile.name,
         authorIcon: userProfile.icon || '',
-        text: newMessage.trim(),
+        text: encryptText(newMessage.trim()), // Encrypt message content!
         createdAt: Date.now(),
       };
       await set(newMessageRef, messageData);

@@ -310,7 +310,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.36</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.38</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
