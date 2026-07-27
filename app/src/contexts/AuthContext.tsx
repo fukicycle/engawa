@@ -14,6 +14,7 @@ interface AuthContextType {
   joinFamily: (inviteCode: string) => Promise<void>;
   createFamily: (familyName: string) => Promise<void>;
   logout: () => Promise<void>;
+  switchFamily: (familyId: string) => Promise<void>;
   fontSize: 'small' | 'normal' | 'large';
   changeFontSize: (size: 'small' | 'normal' | 'large') => void;
 }
@@ -91,6 +92,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       uid: currentUser.uid,
       name,
       familyId: userProfile?.familyId || '',
+      families: userProfile?.families || {},
+      activeFamilyId: userProfile?.activeFamilyId || '',
       icon: userProfile?.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.uid}`
     };
 
@@ -115,10 +118,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const memberRef = ref(database, `families/${targetFamilyId}/members/${currentUser.uid}`);
     await set(memberRef, true);
 
-    // Update user profile
+    // Update user profile families list and activeFamilyId
+    const currentFamilies = userProfile.families || {};
     const updatedProfile: UserProfile = {
       ...userProfile,
-      familyId: targetFamilyId
+      familyId: targetFamilyId,
+      activeFamilyId: targetFamilyId,
+      families: {
+        ...currentFamilies,
+        [targetFamilyId]: true
+      }
     };
     await set(ref(database, `users/${currentUser.uid}`), updatedProfile);
     setUserProfile(updatedProfile);
@@ -146,12 +155,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Save invite code mapping for safe and permission-allowed lookups
     await set(ref(database, `inviteCodes/${inviteCode}`), newFamilyId);
 
-    // Update user profile
+    // Update user profile families list and activeFamilyId
+    const currentFamilies = userProfile.families || {};
     const updatedProfile: UserProfile = {
       ...userProfile,
-      familyId: newFamilyId
+      familyId: newFamilyId,
+      activeFamilyId: newFamilyId,
+      families: {
+        ...currentFamilies,
+        [newFamilyId]: true
+      }
     };
     await set(ref(database, `users/${currentUser.uid}`), updatedProfile);
+    setUserProfile(updatedProfile);
+  };
+
+  const switchFamily = async (familyId: string) => {
+    if (!currentUser || !userProfile) throw new Error("Authentication required");
+    
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      activeFamilyId: familyId,
+      familyId: familyId
+    };
+    
+    await set(ref(database, `users/${currentUser.uid}/activeFamilyId`), familyId);
+    await set(ref(database, `users/${currentUser.uid}/familyId`), familyId);
     setUserProfile(updatedProfile);
   };
 
@@ -168,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     joinFamily,
     createFamily,
     logout,
+    switchFamily,
     fontSize,
     changeFontSize,
   };

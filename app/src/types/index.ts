@@ -2,7 +2,9 @@ export interface UserProfile {
   uid: string;
   name: string;
   icon?: string;
-  familyId?: string;
+  familyId?: string; // (Kept for fallback compatibility)
+  families?: Record<string, boolean>; // Map of participated family IDs (familyId -> true)
+  activeFamilyId?: string; // Currently active family ID
 }
 
 export interface FamilyGroup {

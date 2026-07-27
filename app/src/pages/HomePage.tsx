@@ -38,7 +38,7 @@ const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile, logout, fontSize, changeFontSize } = useAuth();
+  const { currentUser, userProfile, logout, fontSize, changeFontSize, switchFamily } = useAuth();
   const { permission: pushPermission, subscribeUser } = usePushNotifications();
   
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
@@ -47,6 +47,10 @@ export const HomePage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showNotificationGuide, setShowNotificationGuide] = useState(true);
   const [postsLoading, setPostsLoading] = useState(true);
+
+  // Family Switcher States
+  const [isFamilySwitcherOpen, setIsFamilySwitcherOpen] = useState(false);
+  const [userFamiliesList, setUserFamiliesList] = useState<Array<{id: string, name: string}>>([]);
 
   // Dialog States
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -72,16 +76,16 @@ export const HomePage: React.FC = () => {
       navigate('/login');
       return;
     }
-    if (userProfile && !userProfile.familyId) {
+    if (userProfile && !userProfile.activeFamilyId) {
       navigate('/setup-family');
       return;
     }
   }, [currentUser, userProfile]);
 
   useEffect(() => {
-    if (!userProfile?.familyId || !currentUser) return;
+    if (!userProfile?.activeFamilyId || !currentUser) return;
 
-    const familyId = userProfile.familyId;
+    const familyId = userProfile.activeFamilyId;
     const uid = currentUser.uid;
 
     // 1. Listen to Family Info
@@ -166,7 +170,7 @@ export const HomePage: React.FC = () => {
       off(readPostsRef);
       off(notificationsRef);
     };
-  }, [userProfile?.familyId, currentUser?.uid]);
+  }, [userProfile?.activeFamilyId, currentUser?.uid]);
 
   // Modern PWA Native App Icon Badging API (Updates Dock/Launcher Badge Count)
   useEffect(() => {
@@ -183,11 +187,35 @@ export const HomePage: React.FC = () => {
     }
   }, [unreadNotifCount]);
 
+  // Load and resolve the names of all the user's families for the switcher
+  useEffect(() => {
+    if (!userProfile?.families) return;
+    
+    const familyIds = Object.keys(userProfile.families);
+    
+    const fetchNames = async () => {
+      try {
+        const list: Array<{id: string, name: string}> = [];
+        for (const fid of familyIds) {
+          const snap = await get(ref(database, `families/${fid}/name`));
+          if (snap.exists()) {
+            list.push({ id: fid, name: snap.val() as string });
+          }
+        }
+        setUserFamiliesList(list);
+      } catch (err) {
+        console.error("Failed to fetch family names:", err);
+      }
+    };
+    
+    fetchNames();
+  }, [userProfile?.families]);
+
   const handleVote = async (postId: string, optionId: string) => {
-    if (!currentUser || !userProfile?.familyId) return;
+    if (!currentUser || !userProfile?.activeFamilyId) return;
     const voteRef = ref(
       database,
-      `posts/${userProfile.familyId}/${postId}/pollOptions/${optionId}/votes/${currentUser.uid}`
+      `posts/${userProfile.activeFamilyId}/${postId}/pollOptions/${optionId}/votes/${currentUser.uid}`
     );
     
     // Toggle vote: check if already voted
@@ -263,13 +291,20 @@ export const HomePage: React.FC = () => {
 
       {/* Elegant Washi / Shoji Header */}
       <header className="relative z-10 w-full glass rounded-2xl px-5 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/15">
+        <div 
+          onClick={() => setIsFamilySwitcherOpen(true)}
+          className="flex items-center gap-3 cursor-pointer select-none group"
+          title="家族を切り替える"
+        >
+          <div className="w-10 h-10 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/15 group-hover:scale-105 transition-all">
             <HomeIcon size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-widest text-engawa-800 font-soft">縁側</h1>
-            <p className="text-[10px] tracking-widest text-wood-900/50 font-bold">
+            <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
+              <span>縁側</span>
+              <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
+            </h1>
+            <p className="text-[10px] tracking-widest text-wood-900/50 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
             </p>
           </div>
@@ -759,14 +794,6 @@ export const HomePage: React.FC = () => {
         }}
       />
 
-      {/* Custom Reusable Dialog Modals */}
-      <Dialog
-        isOpen={dialogOpen}
-        title={dialogTitle}
-        message={dialogMessage}
-        onClose={() => setDialogOpen(false)}
-      />
-
       {/* 4. Sliding Glassmorphic In-App Notification Drawer */}
       {isNotificationDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -848,6 +875,98 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 5. Sliding Glassmorphic Family Switcher Drawer Overlay */}
+      {isFamilySwitcherOpen && (
+        <div className="fixed inset-0 z-50 flex justify-start">
+          {/* Backdrop with Blur */}
+          <div 
+            className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" 
+            onClick={() => setIsFamilySwitcherOpen(false)} 
+          />
+          
+          {/* Sliding Glassmorphic Switcher Panel */}
+          <div className="relative z-10 w-full max-w-[260px] h-full bg-white/20 backdrop-blur-md border-r border-white/20 shadow-2xl p-5 flex flex-col gap-4 animate-gentleSlideUp">
+            
+            {/* Switcher Header */}
+            <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/15">
+                  <HomeIcon size={16} />
+                </div>
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider font-soft">家族の切り替え</h3>
+              </div>
+              <button 
+                onClick={() => setIsFamilySwitcherOpen(false)}
+                className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60 px-2 py-1 rounded-lg hover:bg-wood-900/5"
+              >
+                閉じる
+              </button>
+            </div>
+
+            {/* Families List */}
+            <div className="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-1 hide-scrollbar">
+              {userFamiliesList.map((fam) => {
+                const isActive = fam.id === userProfile?.activeFamilyId;
+
+                return (
+                  <button
+                    key={fam.id}
+                    onClick={async () => {
+                      if (isActive) {
+                        setIsFamilySwitcherOpen(false);
+                        return;
+                      }
+                      setPostsLoading(true); // show shimmer loading during switch
+                      await switchFamily(fam.id);
+                      setIsFamilySwitcherOpen(false);
+                      setActiveTab('home'); // go home
+                    }}
+                    className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
+                      isActive
+                        ? 'bg-engawa-600/10 border-engawa-500/30 text-engawa-800 ring-1 ring-engawa-500/10 font-bold'
+                        : 'bg-white/40 border-white/30 text-wood-900/70 hover:bg-white/65'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {isActive && (
+                        <span className="w-2 h-2 rounded-full bg-engawa-600 shrink-0" />
+                      )}
+                      <span className="text-xs truncate">{fam.name}</span>
+                    </div>
+                    {isActive && (
+                      <span className="text-engawa-600">
+                        <CheckIcon size={14} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Footer Add Family Option */}
+            <button
+              onClick={() => {
+                setIsFamilySwitcherOpen(false);
+                navigate('/setup-family', { state: { canCancel: true } });
+              }}
+              className="w-full mt-auto py-3 px-4 rounded-2xl bg-engawa-600 hover:bg-engawa-700 text-white font-bold text-xs tracking-wider shadow shadow-engawa-600/10 flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 font-soft"
+            >
+              <span>+</span>
+              <span>新しい家族を登録・参加</span>
+            </button>
+
+          </div>
+        </div>
+      )}
+
+      {/* Custom Reusable Dialog Modals */}
+      <Dialog
+        isOpen={dialogOpen}
+        title={dialogTitle}
+        message={dialogMessage}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   );
 };

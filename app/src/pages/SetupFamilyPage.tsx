@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { UserIcon, PlusIcon, CheckIcon } from '../components/Icons';
 
 export const SetupFamilyPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, userProfile, updateProfileName, createFamily, joinFamily } = useAuth();
+
+  const canCancel = location.state?.canCancel === true;
   
   const [displayName, setDisplayName] = useState('');
   const [familyName, setFamilyName] = useState('');
@@ -23,13 +26,13 @@ export const SetupFamilyPage: React.FC = () => {
     
     if (userProfile) {
       setDisplayName(userProfile.name || currentUser.displayName || '');
-      if (userProfile.familyId) {
+      if (userProfile.activeFamilyId && !canCancel) {
         navigate('/'); // If already has family, go home
       } else if (userProfile.name) {
         setMode('choose');
       }
     }
-  }, [currentUser, userProfile]);
+  }, [currentUser, userProfile, canCancel]);
 
   const handleSaveName = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +91,16 @@ export const SetupFamilyPage: React.FC = () => {
 
       <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 flex flex-col gap-6 animate-gentleScaleIn">
         
+        {/* Cancel/Back Button if coming from switcher */}
+        {canCancel && (
+          <button
+            onClick={() => navigate('/')}
+            className="self-start text-xs font-bold text-wood-900/50 hover:text-wood-900/80 transition-colors flex items-center gap-1"
+          >
+            ← キャンセルして戻る
+          </button>
+        )}
+
         {/* Step 1: Input Profile Name */}
         {mode === 'name' && (
           <form onSubmit={handleSaveName} className="flex flex-col gap-5">

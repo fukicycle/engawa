@@ -69,9 +69,9 @@ export const PostDetailPage: React.FC = () => {
       navigate('/login');
       return;
     }
-    if (!postId || !userProfile?.familyId) return;
+    if (!postId || !userProfile?.activeFamilyId) return;
 
-    const familyId = userProfile.familyId;
+    const familyId = userProfile.activeFamilyId;
 
     // Record the user has read this post (clears unread state)
     set(ref(database, `users/${currentUser.uid}/readPosts/${postId}`), Date.now());
@@ -156,7 +156,7 @@ export const PostDetailPage: React.FC = () => {
       off(messagesRef);
       off(reactionsRef);
     };
-  }, [postId, userProfile?.familyId]);
+  }, [postId, userProfile?.activeFamilyId]);
 
   // Deep-linking scroll to message and highlight
   useEffect(() => {
@@ -196,10 +196,10 @@ export const PostDetailPage: React.FC = () => {
   }, [isEditing, post]);
 
   const handleVote = async (optionId: string) => {
-    if (!currentUser || !userProfile?.familyId || !postId) return;
+    if (!currentUser || !userProfile?.activeFamilyId || !postId) return;
     const voteRef = ref(
       database,
-      `posts/${userProfile.familyId}/${postId}/pollOptions/${optionId}/votes/${currentUser.uid}`
+      `posts/${userProfile.activeFamilyId}/${postId}/pollOptions/${optionId}/votes/${currentUser.uid}`
     );
     
     const snapshot = await get(voteRef);
@@ -212,10 +212,10 @@ export const PostDetailPage: React.FC = () => {
 
   const handleAddToCalendar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!eventTitle.trim() || !eventDate || !currentUser || !userProfile?.familyId || !postId || !post) return;
+    if (!eventTitle.trim() || !eventDate || !currentUser || !userProfile?.activeFamilyId || !postId || !post) return;
 
     try {
-      const familyId = userProfile.familyId;
+      const familyId = userProfile.activeFamilyId;
       
       // 1. Create calendar event
       const eventsRef = ref(database, `calendarEvents/${familyId}`);
@@ -278,10 +278,10 @@ export const PostDetailPage: React.FC = () => {
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editContent.trim() || !currentUser || !userProfile?.familyId || !postId || !post) return;
+    if (!editContent.trim() || !currentUser || !userProfile?.activeFamilyId || !postId || !post) return;
 
     try {
-      const familyId = userProfile.familyId;
+      const familyId = userProfile.activeFamilyId;
       const postRef = ref(database, `posts/${familyId}/${postId}`);
       await set(postRef, {
         ...post,
@@ -296,14 +296,14 @@ export const PostDetailPage: React.FC = () => {
   };
 
   const handleDeletePost = async () => {
-    if (!currentUser || !userProfile?.familyId || !postId || !post) return;
+    if (!currentUser || !userProfile?.activeFamilyId || !postId || !post) return;
     
     setDialogTitle('削除の確認');
     setDialogMessage('この投稿と、ぶら下がっているすべてのやり取りを削除してもよろしいですか？（連動するカレンダー予定も削除されます）');
     setDialogIsConfirm(true);
     setDialogOnConfirm(() => async () => {
       try {
-        const familyId = userProfile.familyId;
+        const familyId = userProfile.activeFamilyId;
 
         // 1. Delete parent post
         await set(ref(database, `posts/${familyId}/${postId}`), null);
@@ -329,10 +329,10 @@ export const PostDetailPage: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser || !userProfile?.familyId || !post || !postId) return;
+    if (!newMessage.trim() || !currentUser || !userProfile?.activeFamilyId || !post || !postId) return;
 
     try {
-      const familyId = userProfile.familyId;
+      const familyId = userProfile.activeFamilyId;
 
       // 1. Update post metadata (replyCount, lastReplyAt) and participants
       const replyCount = (post.replyCount || 0) + 1;
