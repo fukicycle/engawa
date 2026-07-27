@@ -18,13 +18,14 @@ self.addEventListener('push', (event: any) => {
       data: data.data || {} // contains linkPath e.g., /post/post123
     };
 
-    // Update App Icon Badge Count in background if supported
+    // Update App Icon Badge Count in background if supported on iOS/WebKit
     const badgingPromise = (() => {
-      if ('setAppBadge' in navigator && data.badgeCount !== undefined) {
+      const swNavigator = typeof self !== 'undefined' && self.navigator ? self.navigator : null;
+      if (swNavigator && 'setAppBadge' in swNavigator && data.badgeCount !== undefined) {
         if (data.badgeCount > 0) {
-          return (navigator as any).setAppBadge(data.badgeCount);
+          return (swNavigator as any).setAppBadge(data.badgeCount);
         } else {
-          return (navigator as any).clearAppBadge();
+          return (swNavigator as any).clearAppBadge();
         }
       }
       return Promise.resolve();
