@@ -20,8 +20,8 @@
   --font-soft: "Zen Maru Gothic", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
   
   --backdrop-blur-xs: 2px;
-  --backdrop-blur-md: 8px;
-  --backdrop-blur-lg: 12px;
+  --backdrop-blur-md: 4px;
+  --backdrop-blur-lg: 4px;
 }
 
 body {
@@ -34,33 +34,33 @@ body {
   background-image: radial-gradient(circle at 10% 20%, rgba(245, 239, 230, 0.5) 0%, rgba(232, 223, 216, 0.7) 90.1%);
 }
 
-/* Glassmorphism Classes */
+/* Glassmorphism Classes (Reverted transparency with subtle 4px blur) */
 .glass {
   background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .glass-dark {
   background: rgba(44, 62, 28, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .glass-card {
   background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
 }
 
 .glass-input {
   background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   transition: all 0.3s ease;
 }
