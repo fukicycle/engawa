@@ -58,7 +58,7 @@ export const LandingPage: React.FC = () => {
       </div>
 
       <div className="relative z-10 mt-8 text-xs text-wood-900/40 font-medium tracking-wide">
-        © 2026 Engawa. Made with care.
+        © 2026 kotli-sharp. Made with care.
       </div>
     </div>
   );
