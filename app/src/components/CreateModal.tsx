@@ -74,11 +74,11 @@ export const CreateModal: React.FC<CreateModalProps> = ({
     body: string,
     linkPath: string
   ) => {
-    if (!userProfile?.familyId || !currentUser) return;
+    if (!userProfile?.activeFamilyId || !currentUser) return;
 
     try {
       // Fetch all family members
-      const familyMembersRef = ref(database, `families/${userProfile.familyId}/members`);
+      const familyMembersRef = ref(database, `families/${userProfile.activeFamilyId}/members`);
       const snapshot = await get(familyMembersRef);
       if (!snapshot.exists()) return;
 
@@ -101,7 +101,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
       // 1. Enqueue to background push notification queue (server processes this)
       await set(newQueueItemRef, {
         id: notifId,
-        familyId: userProfile.familyId,
+        familyId: userProfile.activeFamilyId,
         type,
         title,
         body,
@@ -129,13 +129,13 @@ export const CreateModal: React.FC<CreateModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser || !userProfile?.familyId) return;
+    if (!currentUser || !userProfile?.activeFamilyId) return;
 
     setError('');
     setLoading(true);
 
     try {
-      const familyId = userProfile.familyId;
+      const familyId = userProfile.activeFamilyId;
 
       if (activeTab === 'post') {
         if (!postContent.trim()) throw new Error('内容を入力してください');
