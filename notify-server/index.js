@@ -78,7 +78,17 @@ queueRef.on('child_added', async (snapshot) => {
 
       const subscription = subSnapshot.val();
 
-      // Fetch user's current unread notifications count
+      // 1. Write the notification record to the target user's in-app notification list first (using Server/Admin rights, which bypasses all security rules!)
+      await db.ref(`userNotifications/${uid}/${queueId}`).set({
+        id: queueId,
+        title: item.title,
+        body: item.body,
+        linkPath: item.linkPath || '/',
+        read: false,
+        createdAt: item.createdAt || Date.now()
+      });
+
+      // 2. Fetch user's current unread notifications count (will be 100% accurate because the new one is already written above!)
       const notifsSnapshot = await db.ref(`userNotifications/${uid}`).get();
       let unreadCount = 0;
       if (notifsSnapshot.exists()) {
@@ -86,16 +96,13 @@ queueRef.on('child_added', async (snapshot) => {
         unreadCount = Object.values(notifs).filter(n => !n.read).length;
       }
 
-      // Calculate final badge count (DB unread + 1 new notification arriving right now)
-      const finalBadgeCount = unreadCount + 1;
-
-      console.log(`- UID: ${uid} | DB Unread Count: ${unreadCount} | Sending Badge Count: ${finalBadgeCount}`);
+      console.log(`- UID: ${uid} | DB Unread Count (Includes New): ${unreadCount} | Sending Badge Count: ${unreadCount}`);
 
       // Payload schema
       const payload = JSON.stringify({
         title: item.title,
         body: item.body,
-        badgeCount: finalBadgeCount,
+        badgeCount: unreadCount,
         data: {
           linkPath: item.linkPath || '/'
         }
