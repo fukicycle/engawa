@@ -35,6 +35,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSizeState] = useState<'small' | 'normal' | 'large'>('normal');
 
+  // Synchronize global html base font size class for proportional scaling across the entire app
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('font-size-small', 'font-size-normal', 'font-size-large');
+    root.classList.add(`font-size-${fontSize}`);
+  }, [fontSize]);
+
   // Load font size preference on mount
   useEffect(() => {
     const saved = localStorage.getItem('engawa_font_size');

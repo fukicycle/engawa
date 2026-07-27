@@ -35,6 +35,17 @@ html, body, #root {
   overflow: hidden; /* Lock viewport background scrolling */
 }
 
+/* Global Font Size Multipliers - dynamically scales EVERYTHING proportionally */
+html.font-size-small {
+  font-size: 13.5px;
+}
+html.font-size-normal {
+  font-size: 15px; /* base standard size */
+}
+html.font-size-large {
+  font-size: 17.5px; /* large size for high accessibility! */
+}
+
 body {
   background-color: var(--color-wood-100);
   color: var(--color-wood-900);
@@ -155,6 +166,54 @@ input, select, textarea {
   border-color: rgba(82, 110, 71, 0.6);
   box-shadow: 0 0 0 2px rgba(82, 110, 71, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.02);
   outline: none;
+}
+
+/* 
+ * Heavy Glass Drawers (Right side)
+ * Uses high 0.72 opacity and intense 20px blur to fully mask underlying text noise!
+ */
+.glass-drawer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  transform: translateZ(0);
+}
+
+.glass-drawer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: inherit;
+}
+
+/* 
+ * Heavy Glass Drawers (Left side)
+ * Uses high 0.72 opacity and intense 20px blur to fully mask underlying text noise!
+ */
+.glass-drawer-left {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+  transform: translateZ(0);
+}
+
+.glass-drawer-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: inherit;
 }
 
 /* Falling Leaves Animation (Simple & Clean) */

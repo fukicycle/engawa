@@ -8,10 +8,8 @@ import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../compo
 import { Dialog } from '../components/Dialog';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
-const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
-  if (size === 'small') return 'text-[13px] leading-relaxed';
-  if (size === 'large') return 'text-[18px] leading-relaxed font-bold tracking-wide';
-  return 'text-[15px] leading-relaxed font-medium'; // normal (highly visible 15px!)
+const getBodyTextClass = (_size: 'small' | 'normal' | 'large') => {
+  return 'text-sm leading-relaxed font-medium'; // Dynamically scaled by root HTML font-size!
 };
 
 const getTitleTextClass = (size: 'small' | 'normal' | 'large') => {
@@ -524,7 +522,7 @@ export const PostDetailPage: React.FC = () => {
               />
               <div>
                 <h4 className={`font-extrabold text-engawa-800 ${getTitleTextClass(fontSize)}`}>{postAuthor.name}</h4>
-                <p className="text-[9px] text-wood-900/75 font-medium">
+                <p className="text-xs text-wood-900/80 font-bold">
                   {new Date(post.createdAt).toLocaleString('ja-JP')}
                   {post.edited && (
                     <span className="text-wood-900/30 font-bold ml-1 text-[8px] bg-wood-900/5 px-1 py-0.5 rounded-md">編集済</span>
@@ -824,7 +822,7 @@ export const PostDetailPage: React.FC = () => {
                       className="w-7 h-7 rounded-full border border-white/30 bg-white/50 mt-0.5"
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
-                      <span className="text-[9px] font-extrabold text-wood-900/75 mb-0.5">{msgAuthor.name}</span>
+                      <span className="text-xs font-bold text-wood-900/80 mb-0.5">{msgAuthor.name}</span>
                       <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all transition-all duration-500 ${
                         isHighlighted
                           ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'
@@ -834,7 +832,7 @@ export const PostDetailPage: React.FC = () => {
                       } ${getBodyTextClass(fontSize)}`}>
                         {msg.text}
                       </div>
-                      <span className="text-[8px] text-wood-900/30 font-medium mt-1">
+                      <span className="text-xs text-wood-900/75 font-bold mt-1">
                         {new Date(msg.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>

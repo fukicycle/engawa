@@ -30,10 +30,8 @@ const formatLastReplyTime = (timestamp: number) => {
   return `${days}日前`;
 };
 
-const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
-  if (size === 'small') return 'text-[13px] leading-relaxed';
-  if (size === 'large') return 'text-[18px] leading-relaxed font-bold tracking-wide';
-  return 'text-[15px] leading-relaxed font-medium'; // normal (15px medium for maximum readability!)
+const getBodyTextClass = (_size: 'small' | 'normal' | 'large') => {
+  return 'text-sm leading-relaxed font-medium'; // Dynamically scaled by root HTML font-size!
 };
 
 export const HomePage: React.FC = () => {
@@ -307,7 +305,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.25</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.28</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -441,7 +439,7 @@ export const HomePage: React.FC = () => {
                         />
                         <div>
                           <h4 className="text-xs font-extrabold text-engawa-800">{author.name}</h4>
-                          <p className="text-[9px] text-wood-900/75 font-medium">
+                          <p className="text-xs text-wood-900/80 font-bold">
                             {date}
                             {post.edited && (
                               <span className="text-wood-900/30 font-bold ml-1 text-[8px] bg-wood-900/5 px-1 py-0.5 rounded-md">編集済</span>
@@ -520,7 +518,7 @@ export const HomePage: React.FC = () => {
                     )}
 
                     {/* Footer Stats / Interaction trigger info */}
-                    <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 text-[10px] text-wood-900/75 font-bold mt-1">
+                    <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 text-xs text-wood-900/85 font-bold mt-1">
                       <div className="flex items-center gap-1 hover:text-engawa-600 transition-colors">
                         <span>💬</span>
                         <span>
@@ -810,8 +808,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setIsNotificationDrawerOpen(false)} 
           />
           
-          {/* Sliding Glassmorphic Panel */}
-          <div className="relative z-10 w-full max-w-xs h-full bg-white/20 backdrop-blur-md border-l border-white/20 shadow-2xl p-5 flex flex-col gap-4 animate-gentleSlideUp">
+          {/* Sliding Glassmorphic Panel with heavy 20px blur and 0.72 opacity */}
+          <div className="relative z-10 w-full max-w-xs h-full glass-drawer p-5 flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
@@ -917,8 +915,8 @@ export const HomePage: React.FC = () => {
             onClick={() => setIsFamilySwitcherOpen(false)} 
           />
           
-          {/* Sliding Glassmorphic Switcher Panel */}
-          <div className="relative z-10 w-full max-w-[260px] h-full bg-white/20 backdrop-blur-md border-r border-white/20 shadow-2xl p-5 flex flex-col gap-4 animate-gentleSlideUp">
+          {/* Sliding Glassmorphic Switcher Panel with heavy 20px blur and 0.72 opacity */}
+          <div className="relative z-10 w-full max-w-[260px] h-full glass-drawer-left p-5 flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Switcher Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
