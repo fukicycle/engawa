@@ -43,6 +43,28 @@ body {
   background-image: radial-gradient(circle at 10% 20%, rgba(245, 239, 230, 0.5) 0%, rgba(232, 223, 216, 0.7) 90.1%);
 }
 
+/* iOS Safari の date/time/month ピッカーの幅・高さ制御 */
+input[type="date"],
+input[type="time"],
+input[type="month"] {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+/* 全フォーム要素のサイズ制御 */
+input, select, textarea {
+  overflow-wrap: normal;
+  box-sizing: border-box;
+  max-width: 100%;
+  line-height: 1.25;
+}
+
 /* 
  * ==========================================
  * Pro-Level Layer Stacking / Overlay Hacks
