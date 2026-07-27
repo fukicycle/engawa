@@ -11,7 +11,7 @@ export const LandingPage: React.FC = () => {
       <LeafBackground />
 
       {/* Main Glass Card */}
-      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-6">
+      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-6 animate-gentleScaleIn">
         {/* Title logo */}
         <div className="flex flex-col items-center gap-2">
           <div className="w-16 h-16 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/20">

@@ -86,7 +86,7 @@ export const SetupFamilyPage: React.FC = () => {
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
       <LeafBackground />
 
-      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 flex flex-col gap-6">
+      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 flex flex-col gap-6 animate-gentleScaleIn">
         
         {/* Step 1: Input Profile Name */}
         {mode === 'name' && (

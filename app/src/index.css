@@ -72,7 +72,7 @@ body {
   outline: none;
 }
 
-/* Falling Leaves Animation (Ephemeral & Beautiful) */
+/* Falling Leaves Animation (Simple & Clean) */
 @keyframes fall {
   0% {
     transform: translateY(-5vh) translateX(0px) rotate(0deg);
@@ -104,3 +104,34 @@ body {
 .leaf-3 { left: 52%; width: 14px; height: 14px; animation-duration: 18s; animation-delay: 0s; }
 .leaf-4 { left: 74%; width: 20px; height: 18px; animation-duration: 26s; animation-delay: 8s; }
 .leaf-5 { left: 88%; width: 15px; height: 16px; animation-duration: 24s; animation-delay: 3s; }
+
+/* 
+ * Peaceful Japanese Decelerating Transitions (EaseOutQuart) 
+ * These provide an extremely calm, slow, and luxurious feeling.
+ */
+@keyframes gentleFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gentleSlideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gentleScaleIn {
+  from { transform: scale(0.96) translateY(4px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-gentleFadeIn {
+  animation: gentleFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gentleSlideUp {
+  animation: gentleSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gentleScaleIn {
+  animation: gentleScaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

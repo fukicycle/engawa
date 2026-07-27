@@ -240,7 +240,7 @@ export const HomePage: React.FC = () => {
         
         {/* SUBVIEW A: HOME (THREADS LIST) */}
         {activeTab === 'home' && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Dynamic Notification Permission Guide */}
             {pushPermission === 'default' && showNotificationGuide && (
@@ -402,7 +402,7 @@ export const HomePage: React.FC = () => {
 
         {/* SUBVIEW B: CALENDAR */}
         {activeTab === 'calendar' && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Elegant Calendar Card */}
             <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-4">
@@ -500,7 +500,7 @@ export const HomePage: React.FC = () => {
 
         {/* SUBVIEW C: SETTINGS & MEMBERS */}
         {activeTab === 'settings' && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Profile Detail */}
             <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex items-center justify-between">

@@ -63,7 +63,7 @@ export const LoginPage: React.FC = () => {
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
       <LeafBackground />
 
-      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 flex flex-col gap-6">
+      <div className="relative z-10 w-full max-w-md glass-card rounded-3xl p-8 flex flex-col gap-6 animate-gentleScaleIn">
         {/* Title */}
         <div className="flex flex-col items-center gap-1">
           <div className="w-12 h-12 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/20">

@@ -396,7 +396,7 @@ export const PostDetailPage: React.FC = () => {
   const isPostAuthor = currentUser?.uid === post.authorId;
 
   return (
-    <div className="relative h-screen overflow-hidden pt-4 px-4 pb-20 max-w-md mx-auto flex flex-col gap-4">
+    <div className="relative h-screen overflow-hidden pt-4 px-4 pb-20 max-w-md mx-auto flex flex-col gap-4 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* INTEGRATED MASTER SINGLE-CARD */}

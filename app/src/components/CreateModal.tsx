@@ -242,10 +242,10 @@ export const CreateModal: React.FC<CreateModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs" onClick={onClose} />
+      <div className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" onClick={onClose} />
 
       {/* Dialog box */}
-      <div className="relative z-10 w-full max-w-md bg-white/60 backdrop-blur-lg border border-white/40 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+      <div className="relative z-10 w-full max-w-md bg-white/60 backdrop-blur-lg border border-white/40 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto animate-gentleSlideUp">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold tracking-widest text-lg text-engawa-800 font-soft">新しい作成</h3>
