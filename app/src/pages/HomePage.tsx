@@ -59,6 +59,8 @@ export const HomePage: React.FC = () => {
   const [notifications, setNotifications] = useState<Record<string, any>>({});
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
 
+  const unreadNotifCount = Object.values(notifications).filter(n => !n.read).length;
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -160,6 +162,21 @@ export const HomePage: React.FC = () => {
     };
   }, [userProfile?.familyId, currentUser?.uid]);
 
+  // Modern PWA Native App Icon Badging API (Updates Dock/Launcher Badge Count)
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator) {
+      try {
+        if (unreadNotifCount > 0) {
+          (navigator as any).setAppBadge(unreadNotifCount);
+        } else {
+          (navigator as any).clearAppBadge();
+        }
+      } catch (error) {
+        console.error('Failed to update PWA home icon badge:', error);
+      }
+    }
+  }, [unreadNotifCount]);
+
   const handleVote = async (postId: string, optionId: string) => {
     if (!currentUser || !userProfile?.familyId) return;
     const voteRef = ref(
@@ -233,8 +250,6 @@ export const HomePage: React.FC = () => {
 
     return days;
   };
-
-  const unreadNotifCount = Object.values(notifications).filter(n => !n.read).length;
 
   return (
     <div className="relative h-screen overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
