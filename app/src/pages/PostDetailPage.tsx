@@ -9,15 +9,15 @@ import { Dialog } from '../components/Dialog';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
 const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
-  if (size === 'small') return 'text-[11px] leading-relaxed';
-  if (size === 'large') return 'text-base md:text-lg leading-loose font-bold tracking-wide';
-  return 'text-[13px] leading-relaxed'; // normal
+  if (size === 'small') return 'text-[13px] leading-relaxed';
+  if (size === 'large') return 'text-[18px] leading-relaxed font-bold tracking-wide';
+  return 'text-[15px] leading-relaxed font-medium'; // normal (highly visible 15px!)
 };
 
 const getTitleTextClass = (size: 'small' | 'normal' | 'large') => {
-  if (size === 'small') return 'text-[10px] font-bold';
-  if (size === 'large') return 'text-sm md:text-base font-extrabold tracking-wide';
-  return 'text-[11px] font-bold'; // normal
+  if (size === 'small') return 'text-[12px] font-bold';
+  if (size === 'large') return 'text-[16px] font-extrabold tracking-wide';
+  return 'text-[14px] font-bold'; // normal (14px!)
 };
 
 export const PostDetailPage: React.FC = () => {
@@ -492,7 +492,7 @@ export const PostDetailPage: React.FC = () => {
     return (
       <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
         <LeafBackground />
-        <div className="relative z-10 glass-card rounded-3xl p-8 text-center text-wood-900/60 font-bold text-sm">
+        <div className="relative z-10 glass-card rounded-3xl p-8 text-center text-wood-900/90 font-bold text-sm">
           投稿が見つからないか、削除されました。
           <button onClick={() => navigate('/')} className="mt-4 block w-full py-2 bg-engawa-600 hover:bg-engawa-700 text-white rounded-xl">
             縁側に戻る
@@ -510,7 +510,7 @@ export const PostDetailPage: React.FC = () => {
       <LeafBackground />
 
       {/* INTEGRATED MASTER SINGLE-CARD */}
-      <div className="relative z-10 glass-card rounded-3xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
+      <div className="relative z-10 glass-card rounded-2xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
         
         {/* UPPER STATIC SECTION (POST DETAILS) */}
         <div className="p-5 flex flex-col gap-3.5 shrink-0 bg-white/20 border-b border-wood-900/5">
@@ -524,7 +524,7 @@ export const PostDetailPage: React.FC = () => {
               />
               <div>
                 <h4 className={`font-extrabold text-engawa-800 ${getTitleTextClass(fontSize)}`}>{postAuthor.name}</h4>
-                <p className="text-[9px] text-wood-900/40 font-medium">
+                <p className="text-[9px] text-wood-900/75 font-medium">
                   {new Date(post.createdAt).toLocaleString('ja-JP')}
                   {post.edited && (
                     <span className="text-wood-900/30 font-bold ml-1 text-[8px] bg-wood-900/5 px-1 py-0.5 rounded-md">編集済</span>
@@ -570,7 +570,7 @@ export const PostDetailPage: React.FC = () => {
                   暦の予定
                 </span>
                 <h3 className="text-xs font-extrabold text-engawa-800 truncate mt-0.5">{linkedEvent.title}</h3>
-                <p className="text-[9px] text-wood-900/60 font-bold mt-0.5">
+                <p className="text-[9px] text-wood-900/90 font-bold mt-0.5">
                   時間: {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
                 </p>
               </div>
@@ -591,7 +591,7 @@ export const PostDetailPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="text-[10px] font-bold text-wood-900/40 px-3 py-1.5 rounded-lg hover:bg-wood-900/5"
+                  className="text-[10px] font-bold text-wood-900/75 px-3 py-1.5 rounded-lg hover:bg-wood-900/5"
                 >
                   キャンセル
                 </button>
@@ -646,7 +646,7 @@ export const PostDetailPage: React.FC = () => {
               </h4>
               
               <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-bold text-wood-900/50">予定のタイトル</label>
+                <label className="text-[9px] font-bold text-wood-900/80">予定のタイトル</label>
                 <input
                   type="text"
                   required
@@ -657,7 +657,7 @@ export const PostDetailPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-bold text-wood-900/50">日付</label>
+                <label className="text-[9px] font-bold text-wood-900/80">日付</label>
                 <input
                   type="date"
                   required
@@ -669,7 +669,7 @@ export const PostDetailPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-wood-900/50">開始時間</label>
+                  <label className="text-[9px] font-bold text-wood-900/80">開始時間</label>
                   <input
                     type="time"
                     value={eventStartTime}
@@ -678,7 +678,7 @@ export const PostDetailPage: React.FC = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-bold text-wood-900/50">終了時間</label>
+                  <label className="text-[9px] font-bold text-wood-900/80">終了時間</label>
                   <input
                     type="time"
                     value={eventEndTime}
@@ -689,7 +689,7 @@ export const PostDetailPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-bold text-wood-900/50">メモ（任意）</label>
+                <label className="text-[9px] font-bold text-wood-900/80">メモ（任意）</label>
                 <textarea
                   rows={1}
                   value={eventDesc}
@@ -703,7 +703,7 @@ export const PostDetailPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCalendarFormOpen(false)}
-                  className="text-[10px] font-bold text-wood-900/40 px-3 py-1.5 rounded-lg hover:bg-wood-900/5"
+                  className="text-[10px] font-bold text-wood-900/75 px-3 py-1.5 rounded-lg hover:bg-wood-900/5"
                 >
                   キャンセル
                 </button>
@@ -734,7 +734,7 @@ export const PostDetailPage: React.FC = () => {
                   title={item.users.join(', ')}
                   className="text-[10px] font-bold bg-white/50 border border-white/70 px-2.5 py-1 rounded-full text-engawa-800 shadow-sm cursor-help"
                 >
-                  {item.text} <span className="text-wood-900/40 font-extrabold ml-0.5">{item.users.length}</span>
+                  {item.text} <span className="text-wood-900/75 font-extrabold ml-0.5">{item.users.length}</span>
                 </div>
               ))}
             </div>
@@ -798,7 +798,7 @@ export const PostDetailPage: React.FC = () => {
 
         {/* MIDDLE SCROLLABLE SECTION (MESSAGES / REPLIES LIST) */}
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 min-h-0 bg-white/5 hide-scrollbar">
-          <h3 className={`font-extrabold text-wood-900/50 tracking-wider ${getTitleTextClass(fontSize)}`}>やり取り一覧 ({messages.length})</h3>
+          <h3 className={`font-extrabold text-wood-900/80 tracking-wider ${getTitleTextClass(fontSize)}`}>やり取り一覧 ({messages.length})</h3>
 
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 py-8 text-wood-900/30">
@@ -824,7 +824,7 @@ export const PostDetailPage: React.FC = () => {
                       className="w-7 h-7 rounded-full border border-white/30 bg-white/50 mt-0.5"
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
-                      <span className="text-[9px] font-extrabold text-wood-900/40 mb-0.5">{msgAuthor.name}</span>
+                      <span className="text-[9px] font-extrabold text-wood-900/75 mb-0.5">{msgAuthor.name}</span>
                       <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all transition-all duration-500 ${
                         isHighlighted
                           ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'

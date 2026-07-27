@@ -31,9 +31,9 @@ const formatLastReplyTime = (timestamp: number) => {
 };
 
 const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
-  if (size === 'small') return 'text-[11px] leading-relaxed';
-  if (size === 'large') return 'text-base md:text-lg leading-loose font-bold tracking-wide';
-  return 'text-[13px] leading-relaxed'; // normal
+  if (size === 'small') return 'text-[13px] leading-relaxed';
+  if (size === 'large') return 'text-[18px] leading-relaxed font-bold tracking-wide';
+  return 'text-[15px] leading-relaxed font-medium'; // normal (15px medium for maximum readability!)
 };
 
 export const HomePage: React.FC = () => {
@@ -309,7 +309,7 @@ export const HomePage: React.FC = () => {
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
               <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.25</span>
             </h1>
-            <p className="text-[10px] tracking-widest text-wood-900/50 font-bold truncate max-w-[120px]">
+            <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
             </p>
           </div>
@@ -345,7 +345,7 @@ export const HomePage: React.FC = () => {
       </header>
 
       {/* MAIN VIEW CONTENT CONTAINER */}
-      <main className="relative z-10 flex-1 flex flex-col gap-4 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)] hide-scrollbar min-h-0">
+      <main className="relative z-10 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)] hide-scrollbar min-h-0">
         
         {/* SUBVIEW A: HOME (THREADS LIST) */}
         {activeTab === 'home' && (
@@ -353,14 +353,14 @@ export const HomePage: React.FC = () => {
             
             {/* Dynamic Notification Permission Guide */}
             {pushPermission === 'default' && showNotificationGuide && (
-              <div className="glass-card rounded-3xl p-5 flex flex-col gap-3">
+              <div className="glass-card rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 shrink-0">
                     <BellIcon size={18} />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-engawa-800">通知を有効にしませんか？</h4>
-                    <p className="text-[10px] text-wood-900/60 leading-relaxed mt-1">
+                    <p className="text-[10px] text-wood-900/90 leading-relaxed mt-1">
                       家族からの新しい「投稿」や「あなたへの返信」を、アプリを閉じていてもリアルタイムにお届けします。関係のないチャットの通知は届かないので静かです。
                     </p>
                   </div>
@@ -368,7 +368,7 @@ export const HomePage: React.FC = () => {
                 <div className="flex gap-2 justify-end mt-1">
                   <button
                     onClick={() => setShowNotificationGuide(false)}
-                    className="text-[9px] font-bold text-wood-900/40 px-3 py-1.5 rounded-xl hover:bg-wood-900/5"
+                    className="text-[9px] font-bold text-wood-900/75 px-3 py-1.5 rounded-xl hover:bg-wood-900/5"
                   >
                     また今度
                   </button>
@@ -386,7 +386,7 @@ export const HomePage: React.FC = () => {
               // Beautiful Skeleton Cards with left-to-right shimmer glow!
               <div className="flex flex-col gap-4">
                 {[1, 2, 3].map((n) => (
-                  <div key={n} className="glass-card rounded-3xl p-5 flex flex-col gap-4 overflow-hidden relative">
+                  <div key={n} className="glass-card rounded-2xl p-4 flex flex-col gap-4 overflow-hidden relative">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
                       <div className="flex flex-col gap-1.5 flex-1">
@@ -406,7 +406,7 @@ export const HomePage: React.FC = () => {
                 ))}
               </div>
             ) : posts.length === 0 ? (
-              <div className="glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/40">
+              <div className="glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/75">
                 <LeafIcon size={40} className="opacity-30" />
                 <p className="text-xs font-bold tracking-wider">縁側は静かです。<br />新しい会話を始めてみましょう。</p>
               </div>
@@ -425,7 +425,7 @@ export const HomePage: React.FC = () => {
                   <div
                     key={post.id}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    className={`glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group ${
+                    className={`glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group ${
                       isUnread
                         ? 'border-engawa-500/40 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5'
                         : ''
@@ -441,7 +441,7 @@ export const HomePage: React.FC = () => {
                         />
                         <div>
                           <h4 className="text-xs font-extrabold text-engawa-800">{author.name}</h4>
-                          <p className="text-[9px] text-wood-900/40 font-medium">
+                          <p className="text-[9px] text-wood-900/75 font-medium">
                             {date}
                             {post.edited && (
                               <span className="text-wood-900/30 font-bold ml-1 text-[8px] bg-wood-900/5 px-1 py-0.5 rounded-md">編集済</span>
@@ -483,7 +483,7 @@ export const HomePage: React.FC = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h5 className="text-xs font-extrabold text-engawa-800 truncate">{linkedEvent.title}</h5>
-                            <p className="text-[9px] text-wood-900/50 font-bold mt-0.5">
+                            <p className="text-[9px] text-wood-900/80 font-bold mt-0.5">
                               {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
                             </p>
                           </div>
@@ -520,7 +520,7 @@ export const HomePage: React.FC = () => {
                     )}
 
                     {/* Footer Stats / Interaction trigger info */}
-                    <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 text-[10px] text-wood-900/40 font-bold mt-1">
+                    <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 text-[10px] text-wood-900/75 font-bold mt-1">
                       <div className="flex items-center gap-1 hover:text-engawa-600 transition-colors">
                         <span>💬</span>
                         <span>
@@ -547,7 +547,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Elegant Calendar Card */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-4">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
                   <button
@@ -566,11 +566,11 @@ export const HomePage: React.FC = () => {
                     →
                   </button>
                 </div>
-                <span className="text-[10px] font-bold text-wood-900/40">家族カレンダー</span>
+                <span className="text-[10px] font-bold text-wood-900/75">家族カレンダー</span>
               </div>
 
               {/* Day of Week Headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-wood-900/40">
+              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-wood-900/75">
                 <span className="text-red-400">日</span>
                 <span>月</span>
                 <span>火</span>
@@ -587,7 +587,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Event Agenda Card for Selected Date */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
                   {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
@@ -605,7 +605,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {selectedDateEvents.length === 0 ? (
-                <p className="text-xs text-wood-900/40 font-bold py-4 text-center">この日の予定はありません。</p>
+                <p className="text-xs text-wood-900/75 font-bold py-4 text-center">この日の予定はありません。</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {selectedDateEvents.map((ev) => (
@@ -625,7 +625,7 @@ export const HomePage: React.FC = () => {
                         )}
                       </div>
                       {ev.description && (
-                        <p className="text-[11px] text-wood-900/60 mt-1">{ev.description}</p>
+                        <p className="text-[11px] text-wood-900/90 mt-1">{ev.description}</p>
                       )}
                       {ev.linkedPostId && (
                         <div className="text-[9px] font-extrabold text-engawa-600 mt-2 hover:underline">
@@ -645,7 +645,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Profile Detail */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex items-center justify-between">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img
                   src={userProfile?.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser?.uid}`}
@@ -654,19 +654,19 @@ export const HomePage: React.FC = () => {
                 />
                 <div>
                   <h3 className="text-sm font-extrabold text-engawa-800">{userProfile?.name}</h3>
-                  <p className="text-[10px] text-wood-900/40">{currentUser?.email}</p>
+                  <p className="text-[10px] text-wood-900/75">{currentUser?.email}</p>
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-full hover:bg-red-500/10 hover:text-red-600 text-wood-900/40 flex items-center justify-center transition-colors"
+                className="w-10 h-10 rounded-full hover:bg-red-500/10 hover:text-red-600 text-wood-900/75 flex items-center justify-center transition-colors"
               >
                 <LogOutIcon size={20} />
               </button>
             </div>
 
             {/* Notification Settings */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <div className="text-engawa-600"><BellIcon size={18} /></div>
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">通知の設定</h3>
@@ -675,7 +675,7 @@ export const HomePage: React.FC = () => {
               <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-wood-900/80">バックグラウンド通知</span>
-                  <span className="text-[10px] text-wood-900/40 font-medium">
+                  <span className="text-[10px] text-wood-900/75 font-medium">
                     {pushPermission === 'granted' 
                       ? '有効（リアルタイムにお届けします）' 
                       : pushPermission === 'denied' 
@@ -704,7 +704,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Font Size Settings */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-engawa-600 font-soft">Aa</span>
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">文字サイズの変更</h3>
@@ -718,20 +718,20 @@ export const HomePage: React.FC = () => {
                     className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
                       fontSize === size
                         ? 'bg-white text-engawa-700 shadow-sm'
-                        : 'text-wood-900/50 hover:text-wood-900/70'
+                        : 'text-wood-900/80 hover:text-wood-900/70'
                     }`}
                   >
                     {size === 'small' ? '小さめ' : size === 'normal' ? '普通' : '大きめ'}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-wood-900/40 leading-relaxed px-1 font-medium text-center">
+              <p className="text-[10px] text-wood-900/75 leading-relaxed px-1 font-medium text-center">
                 スレッド本文やチャット、お知らせ履歴などの文字サイズが変更されます
               </p>
             </div>
 
             {/* Family Members List */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
                 {family?.name || '家族'} のメンバー
               </h3>
@@ -756,9 +756,9 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Invitation Code Card */}
-            <div className="glass-card rounded-3xl p-5 shadow-sm flex flex-col gap-3 text-center">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3 text-center">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">家族の追加</h3>
-              <p className="text-[11px] text-wood-900/60 leading-relaxed px-2">
+              <p className="text-[11px] text-wood-900/90 leading-relaxed px-2">
                 まだ縁側にいない家族を招待しましょう。<br />このコードを教えて「招待コードで参加」からログインしてもらいます。
               </p>
               <div className="bg-white/40 border border-white/50 rounded-2xl py-3 px-6 mt-1 flex items-center justify-center gap-3">
@@ -821,7 +821,7 @@ export const HomePage: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsNotificationDrawerOpen(false)}
-                className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60 px-2 py-1 rounded-lg hover:bg-wood-900/5"
+                className="text-xs font-bold text-wood-900/75 hover:text-wood-900/90 px-2 py-1 rounded-lg hover:bg-wood-900/5"
               >
                 閉じる
               </button>
@@ -867,12 +867,12 @@ export const HomePage: React.FC = () => {
                         }}
                         className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col gap-1.5 hover:scale-[1.01] active:scale-[0.99] ${
                           notif.read
-                            ? 'bg-white/10 border-white/20 text-wood-900/50'
+                            ? 'bg-white/10 border-white/20 text-wood-900/80'
                             : 'bg-white/60 border-engawa-500/30 text-wood-900 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-1">
-                          <h4 className={`text-xs font-extrabold ${notif.read ? 'text-wood-900/60' : 'text-engawa-800'}`}>
+                          <h4 className={`text-xs font-extrabold ${notif.read ? 'text-wood-900/90' : 'text-engawa-800'}`}>
                             {notif.title}
                           </h4>
                           {!notif.read && (
@@ -892,7 +892,7 @@ export const HomePage: React.FC = () => {
                             }}
                             className={`text-[8px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${
                               notif.read
-                                ? 'bg-white/35 border-white/50 text-wood-900/40 hover:bg-white/55'
+                                ? 'bg-white/35 border-white/50 text-wood-900/75 hover:bg-white/55'
                                 : 'bg-engawa-600/15 border-engawa-500/25 text-engawa-800 hover:bg-engawa-600/25'
                             }`}
                           >
@@ -930,7 +930,7 @@ export const HomePage: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsFamilySwitcherOpen(false)}
-                className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60 px-2 py-1 rounded-lg hover:bg-wood-900/5"
+                className="text-xs font-bold text-wood-900/75 hover:text-wood-900/90 px-2 py-1 rounded-lg hover:bg-wood-900/5"
               >
                 閉じる
               </button>
