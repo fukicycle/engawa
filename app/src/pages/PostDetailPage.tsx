@@ -22,6 +22,14 @@ export const PostDetailPage: React.FC = () => {
   const [customReaction, setCustomReaction] = useState('');
   const [isReactionOpen, setIsReactionOpen] = useState(false);
 
+  // States for "Add to Calendar" inline form
+  const [isCalendarFormOpen, setIsCalendarFormOpen] = useState(false);
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventStartTime, setEventStartTime] = useState('');
+  const [eventEndTime, setEventEndTime] = useState('');
+  const [eventDesc, setEventDesc] = useState('');
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
@@ -115,6 +123,94 @@ export const PostDetailPage: React.FC = () => {
     };
   }, [postId, userProfile?.familyId]);
 
+  // Prefill event title when "Add to Calendar" form opens
+  useEffect(() => {
+    if (isCalendarFormOpen && post) {
+      setEventTitle(post.content.substring(0, 30).trim());
+    }
+  }, [isCalendarFormOpen, post]);
+
+  const handleVote = async (optionId: string) => {
+    if (!currentUser || !userProfile?.familyId || !postId) return;
+    const voteRef = ref(
+      database,
+      `posts/${userProfile.familyId}/${postId}/pollOptions/${optionId}/votes/${currentUser.uid}`
+    );
+    
+    const snapshot = await get(voteRef);
+    if (snapshot.exists() && snapshot.val() === true) {
+      await set(voteRef, null);
+    } else {
+      await set(voteRef, true);
+    }
+  };
+
+  const handleAddToCalendar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventTitle.trim() || !eventDate || !currentUser || !userProfile?.familyId || !postId || !post) return;
+
+    try {
+      const familyId = userProfile.familyId;
+      
+      // 1. Create calendar event
+      const eventsRef = ref(database, `calendarEvents/${familyId}`);
+      const newEventRef = push(eventsRef);
+      const eventId = newEventRef.key!;
+
+      const eventData = {
+        id: eventId,
+        title: eventTitle.trim(),
+        description: eventDesc.trim() || '',
+        date: eventDate,
+        startTime: eventStartTime || '',
+        endTime: eventEndTime || '',
+        authorId: currentUser.uid,
+        linkedPostId: postId,
+      };
+      await set(newEventRef, eventData);
+
+      // 2. Update post to represent a calendar-linked post
+      const postRef = ref(database, `posts/${familyId}/${postId}`);
+      await set(postRef, {
+        ...post,
+        type: 'calendar',
+        eventId: eventId,
+      });
+
+      // 3. Enqueue notification for family members
+      const familyMembersRef = ref(database, `families/${familyId}/members`);
+      const snapshot = await get(familyMembersRef);
+      if (snapshot.exists()) {
+        const membersMap = snapshot.val() as Record<string, boolean>;
+        const targetUids: Record<string, boolean> = {};
+        for (const uid in membersMap) {
+          if (uid !== currentUser.uid) {
+            targetUids[uid] = true;
+          }
+        }
+
+        if (Object.keys(targetUids).length > 0) {
+          const queueRef = ref(database, 'notificationQueue');
+          const newQueueItemRef = push(queueRef);
+          await set(newQueueItemRef, {
+            id: newQueueItemRef.key,
+            familyId,
+            type: 'new_event',
+            title: `予定登録: ${eventTitle.trim()}`,
+            body: `${eventDate} に予定が追加されました。`,
+            targetUids,
+            linkPath: `/post/${postId}`,
+            createdAt: Date.now(),
+          });
+        }
+      }
+
+      setIsCalendarFormOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser || !userProfile?.familyId || !post || !postId) return;
@@ -122,9 +218,20 @@ export const PostDetailPage: React.FC = () => {
     try {
       const familyId = userProfile.familyId;
 
-      // 1. Add current user as a participant to this conversation
-      const participantRef = ref(database, `posts/${familyId}/${postId}/participants/${currentUser.uid}`);
-      await set(participantRef, true);
+      // 1. Update post metadata (replyCount, lastReplyAt) and participants
+      const replyCount = (post.replyCount || 0) + 1;
+      const lastReplyAt = Date.now();
+      
+      const postUpdateRef = ref(database, `posts/${familyId}/${postId}`);
+      await set(postUpdateRef, {
+        ...post,
+        replyCount,
+        lastReplyAt,
+        participants: {
+          ...(post.participants || {}),
+          [currentUser.uid]: true
+        }
+      });
 
       // 2. Write the message
       const messagesRef = ref(database, `messages/${postId}`);
@@ -283,6 +390,114 @@ export const PostDetailPage: React.FC = () => {
           {post.content}
         </p>
 
+        {/* Poll Special UI */}
+        {post.type === 'poll' && post.pollOptions && (
+          <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/30 border border-white/40 mt-1">
+            {Object.values(post.pollOptions).map((opt) => {
+              const votesMap = opt.votes || {};
+              const voteCount = Object.keys(votesMap).length;
+              const hasVoted = currentUser ? votesMap[currentUser.uid] === true : false;
+              
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleVote(opt.id)}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all relative overflow-hidden ${
+                    hasVoted
+                      ? 'bg-engawa-600/10 border-engawa-600/30 text-engawa-800'
+                      : 'bg-white/40 border-white/50 hover:bg-white/60 text-wood-900/70'
+                  }`}
+                >
+                  <span>{opt.text}</span>
+                  <span className="bg-white/60 px-2 py-0.5 rounded-md border border-white text-[10px]">
+                    {voteCount} 票
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Inline Add to Calendar Form */}
+        {post.type === 'text' && isCalendarFormOpen && (
+          <form onSubmit={handleAddToCalendar} className="bg-wood-50/80 border border-wood-200 p-4 rounded-2xl flex flex-col gap-3 mt-2 animate-fadeIn">
+            <h4 className="text-xs font-bold text-engawa-800 tracking-wider flex items-center gap-1.5">
+              <span>📅</span>
+              <span>この会話の内容を暦（カレンダー）に登録</span>
+            </h4>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] font-bold text-wood-900/50">予定のタイトル</label>
+              <input
+                type="text"
+                required
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] font-bold text-wood-900/50">日付</label>
+              <input
+                type="date"
+                required
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] font-bold text-wood-900/50">開始時間</label>
+                <input
+                  type="time"
+                  value={eventStartTime}
+                  onChange={(e) => setEventStartTime(e.target.value)}
+                  className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] font-bold text-wood-900/50">終了時間</label>
+                <input
+                  type="time"
+                  value={eventEndTime}
+                  onChange={(e) => setEventEndTime(e.target.value)}
+                  className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] font-bold text-wood-900/50">メモ（任意）</label>
+              <textarea
+                rows={1}
+                value={eventDesc}
+                onChange={(e) => setEventDesc(e.target.value)}
+                placeholder="場所やメモなど..."
+                className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900 resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end mt-1">
+              <button
+                type="button"
+                onClick={() => setIsCalendarFormOpen(false)}
+                className="text-[10px] font-bold text-wood-900/40 px-3 py-1.5 rounded-lg hover:bg-wood-900/5"
+              >
+                キャンセル
+              </button>
+              <button
+                type="submit"
+                className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 px-4 py-1.5 rounded-lg shadow-sm"
+              >
+                登録する
+              </button>
+            </div>
+          </form>
+        )}
+
         {/* Reaction Bubbles list */}
         {reactions.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2 px-1">
@@ -307,14 +522,25 @@ export const PostDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Reaction Drawer trigger */}
-        <div className="flex border-t border-wood-900/5 pt-2.5 mt-1 justify-end">
-          <button
-            onClick={() => setIsReactionOpen(!isReactionOpen)}
-            className="text-[10px] font-bold text-engawa-600 hover:text-engawa-700 bg-white/30 border border-white/40 px-3 py-1.5 rounded-full transition-colors"
-          >
-            リアクションを残す
-          </button>
+        {/* Reaction and Calendar Drawer triggers */}
+        <div className="flex border-t border-wood-900/5 pt-2.5 mt-1 justify-between items-center">
+          {post.type === 'text' && !isCalendarFormOpen && (
+            <button
+              onClick={() => setIsCalendarFormOpen(true)}
+              className="text-[10px] font-bold text-engawa-700 hover:text-engawa-800 bg-wood-100 hover:bg-wood-200/50 px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1"
+            >
+              <span>📅</span>
+              <span>暦に追加する</span>
+            </button>
+          )}
+          <div className="ml-auto">
+            <button
+              onClick={() => setIsReactionOpen(!isReactionOpen)}
+              className="text-[10px] font-bold text-engawa-600 hover:text-engawa-700 bg-white/30 border border-white/40 px-3 py-1.5 rounded-full transition-colors"
+            >
+              リアクションを残す
+            </button>
+          </div>
         </div>
 
         {/* Keyboard / Emoji Reaction Panel */}

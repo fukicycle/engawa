@@ -37,6 +37,10 @@ export interface Post {
   
   // Optional for Calendar type
   eventId?: string;
+
+  // Metadata for replies
+  replyCount?: number;
+  lastReplyAt?: number;
 }
 
 export interface Message {

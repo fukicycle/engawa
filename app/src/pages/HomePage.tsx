@@ -16,6 +16,19 @@ import {
 import type { Post, CalendarEvent, UserProfile, FamilyGroup } from '../types';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
+const formatLastReplyTime = (timestamp: number) => {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 1) return 'たった今';
+  if (minutes < 60) return `${minutes}分前`;
+  if (hours < 24) return `${hours}時間前`;
+  return `${days}日前`;
+};
+
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, userProfile, logout } = useAuth();
@@ -351,10 +364,19 @@ export const HomePage: React.FC = () => {
 
                     {/* Footer Stats / Interaction trigger info */}
                     <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 text-[10px] text-wood-900/40 font-bold mt-1">
-                      <span className="hover:text-engawa-600 transition-colors">
-                        チャットに参加する →
+                      <div className="flex items-center gap-1 hover:text-engawa-600 transition-colors">
+                        <span>💬</span>
+                        <span>
+                          {post.replyCount 
+                            ? `やり取り: ${post.replyCount}件` 
+                            : 'まだやり取りはありません'}
+                        </span>
+                      </div>
+                      <span>
+                        {post.lastReplyAt 
+                          ? `最後: ${formatLastReplyTime(post.lastReplyAt)}` 
+                          : 'のんびり話しましょう'}
                       </span>
-                      <span>返信・リアクション</span>
                     </div>
                   </div>
                 );
