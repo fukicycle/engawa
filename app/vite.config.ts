@@ -12,6 +12,10 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: 'inline',
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       manifest: {
         name: '縁側',
         short_name: '縁側',
