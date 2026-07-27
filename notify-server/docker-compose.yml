@@ -1,0 +1,16 @@
+services:
+  engawa-notify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: engawa-notify-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./service-account.json:/usr/src/app/service-account.json
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
