@@ -519,7 +519,7 @@ export const PostDetailPage: React.FC = () => {
   const isPostAuthor = currentUser?.uid === post.authorId;
 
   return (
-    <div className="relative h-screen overflow-hidden pt-4 px-4 pb-20 max-w-md mx-auto flex flex-col gap-4 animate-gentleSlideUp">
+    <div className="relative h-screen overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+80px)] max-w-md mx-auto flex flex-col gap-4 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* INTEGRATED MASTER SINGLE-CARD */}
@@ -598,7 +598,7 @@ export const PostDetailPage: React.FC = () => {
                 rows={3}
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full glass-input rounded-2xl px-3 py-2 text-xs text-wood-900 resize-none"
+                className="w-full glass-input rounded-2xl px-3 py-2 text-base text-wood-900 resize-none"
               />
               <div className="flex gap-2 justify-end">
                 <button
@@ -665,7 +665,7 @@ export const PostDetailPage: React.FC = () => {
                   required
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                  className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
                 />
               </div>
 
@@ -676,7 +676,7 @@ export const PostDetailPage: React.FC = () => {
                   required
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                  className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
                 />
               </div>
 
@@ -687,7 +687,7 @@ export const PostDetailPage: React.FC = () => {
                     type="time"
                     value={eventStartTime}
                     onChange={(e) => setEventStartTime(e.target.value)}
-                    className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                    className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -696,7 +696,7 @@ export const PostDetailPage: React.FC = () => {
                     type="time"
                     value={eventEndTime}
                     onChange={(e) => setEventEndTime(e.target.value)}
-                    className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900"
+                    className="glass-input rounded-xl px-3 py-2 text-base text-wood-900"
                   />
                 </div>
               </div>
@@ -708,7 +708,7 @@ export const PostDetailPage: React.FC = () => {
                   value={eventDesc}
                   onChange={(e) => setEventDesc(e.target.value)}
                   placeholder="場所やメモなど..."
-                  className="glass-input rounded-xl px-3 py-2 text-xs text-wood-900 resize-none"
+                  className="glass-input rounded-xl px-3 py-2 text-base text-wood-900 resize-none"
                 />
               </div>
 
@@ -796,7 +796,7 @@ export const PostDetailPage: React.FC = () => {
                   value={customReaction}
                   onChange={(e) => setCustomReaction(e.target.value)}
                   placeholder="10文字以内の言葉を入力..."
-                  className="flex-1 glass-input rounded-xl px-3 py-1.5 text-xs text-wood-900 placeholder:text-wood-900/30"
+                  className="flex-1 glass-input rounded-xl px-3 py-1.5 text-base text-wood-900 placeholder:text-wood-900/30"
                 />
                 <button
                   onClick={() => handleAddReaction(customReaction)}
@@ -861,11 +861,11 @@ export const PostDetailPage: React.FC = () => {
       </div>
 
       {/* ERGONOMIC BOTTOM composite navigation & reply inputs bar */}
-      <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto flex gap-2 items-center">
+      <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 bg-white/20 backdrop-blur-md border-t border-white/10 flex gap-2 items-center">
         {/* Thumb-reachable Circular Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="w-12 h-12 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 text-wood-900/70 hover:text-wood-900/90 flex items-center justify-center shadow-lg transition-all shrink-0 active:scale-95"
+          className="w-12 h-12 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 text-wood-900/70 hover:text-wood-900/90 flex items-center justify-center shadow-md transition-all shrink-0 active:scale-95"
           title="戻る"
         >
           <ArrowLeftIcon size={20} />
@@ -879,11 +879,11 @@ export const PostDetailPage: React.FC = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="返信を入力..."
-            className="flex-1 glass-input rounded-2xl px-4 py-3.5 text-sm text-wood-900 placeholder:text-wood-900/30 shadow-lg"
+            className="flex-1 glass-input rounded-2xl px-4 py-3.5 text-base text-wood-900 placeholder:text-wood-900/30 shadow-md"
           />
           <button
             type="submit"
-            className="w-12 h-12 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-lg shadow-engawa-600/15 transition-all shrink-0 active:scale-95 border border-white/10"
+            className="w-12 h-12 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-md shadow-engawa-600/15 transition-all shrink-0 active:scale-95 border border-white/10"
           >
             <SendIcon size={18} />
           </button>

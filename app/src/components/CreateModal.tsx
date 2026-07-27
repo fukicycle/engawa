@@ -319,7 +319,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
                 placeholder="縁側に書き残したい出来事、つぶやきなどをどうぞ..."
-                className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30 resize-none"
+                className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30 resize-none"
               />
             </div>
           )}
@@ -334,7 +334,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   value={pollQuestion}
                   onChange={(e) => setPollQuestion(e.target.value)}
                   placeholder="みんなに聞いてみたいこと（例: 夕飯何がいい？）"
-                  className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30"
+                  className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30"
                 />
               </div>
 
@@ -348,7 +348,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                       value={opt}
                       onChange={(e) => handlePollOptionChange(idx, e.target.value)}
                       placeholder={`選択肢 ${idx + 1}`}
-                      className="flex-1 glass-input rounded-xl px-3.5 py-2.5 text-xs text-wood-900 placeholder:text-wood-900/30"
+                      className="flex-1 glass-input rounded-xl px-3.5 py-2.5 text-base text-wood-900 placeholder:text-wood-900/30"
                     />
                     {pollOptions.length > 2 && (
                       <button
@@ -383,7 +383,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   placeholder="例: たろうの誕生日会"
-                  className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30"
+                  className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30"
                 />
               </div>
 
@@ -394,7 +394,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   required
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900"
+                  className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
                 />
               </div>
 
@@ -405,7 +405,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                     type="time"
                     value={eventStartTime}
                     onChange={(e) => setEventStartTime(e.target.value)}
-                    className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900"
+                    className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -414,7 +414,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                     type="time"
                     value={eventEndTime}
                     onChange={(e) => setEventStartTimeEnd(e.target.value)}
-                    className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900"
+                    className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900"
                   />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   value={eventDesc}
                   onChange={(e) => setEventDesc(e.target.value)}
                   placeholder="持ち物や場所など..."
-                  className="w-full glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30 resize-none"
+                  className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30 resize-none"
                 />
               </div>
 

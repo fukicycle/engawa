@@ -92,7 +92,7 @@ export const LoginPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@family.com"
-              className="glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30"
+              className="glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30"
             />
           </div>
 
@@ -104,7 +104,7 @@ export const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="glass-input rounded-2xl px-4 py-3 text-sm text-wood-900 placeholder:text-wood-900/30"
+              className="glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30"
             />
           </div>
 

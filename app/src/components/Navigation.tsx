@@ -13,12 +13,12 @@ export const Navigation: React.FC<NavigationProps> = ({
   onPlusClick
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto h-[64px]">
+    <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto h-[calc(env(safe-area-inset-bottom)+64px)]">
       
-      {/* 1. Custom Circular Notch/Cutout Mask (The Carved-out effect) */}
+      {/* 1. Custom Circular Notch/Cutout Mask (The Carved-out effect - sits above safe area height) */}
       <div className="absolute top-[-18px] right-5 w-14 h-14 rounded-full bg-wood-100 border border-white/20 shadow-inner z-30" />
 
-      {/* 2. Half-sunken Creation Button (FAB embedded in the notch) */}
+      {/* 2. Half-sunken Creation Button (FAB embedded in the notch - sits above safe area height) */}
       <button
         onClick={onPlusClick}
         className="absolute top-[-12px] right-6 w-12 h-12 rounded-full bg-engawa-600 hover:bg-engawa-700 text-white flex items-center justify-center shadow-lg shadow-engawa-600/35 border border-white/25 active:scale-95 hover:scale-105 transition-all z-40"
@@ -27,8 +27,8 @@ export const Navigation: React.FC<NavigationProps> = ({
         <PlusIcon size={20} />
       </button>
 
-      {/* 3. Main Translucent Bottom Navigation Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white/40 backdrop-blur-md border-t border-white/20 shadow-lg px-5 flex items-center justify-between rounded-t-3xl z-20">
+      {/* 3. Main Translucent Bottom Navigation Bar (Stretches to cover bottom safe area on iPhone) */}
+      <div className="absolute bottom-0 left-0 right-0 h-[calc(env(safe-area-inset-bottom)+64px)] pb-[env(safe-area-inset-bottom)] bg-white/40 backdrop-blur-md border-t border-white/20 shadow-lg px-5 flex items-center justify-between rounded-t-3xl z-20">
         
         {/* Home Tab */}
         <button
@@ -40,7 +40,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           }`}
         >
           <HomeIcon size={20} />
-          <span className="text-[9px] tracking-wider font-extrabold">縁側</span>
+          <span className="text-[9px] tracking-wider font-extrabold font-soft">縁側</span>
         </button>
 
         {/* Calendar Tab */}
@@ -53,7 +53,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           }`}
         >
           <CalendarIcon size={20} />
-          <span className="text-[9px] tracking-wider font-extrabold">暦</span>
+          <span className="text-[9px] tracking-wider font-extrabold font-soft">暦</span>
         </button>
 
         {/* Settings Tab */}
@@ -66,7 +66,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           }`}
         >
           <UserIcon size={20} />
-          <span className="text-[9px] tracking-wider font-extrabold">手帳</span>
+          <span className="text-[9px] tracking-wider font-extrabold font-soft">手帳</span>
         </button>
 
         {/* Empty Spacer on the far right (Matches width of notch/FAB space) */}

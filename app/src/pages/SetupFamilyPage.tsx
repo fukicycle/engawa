@@ -126,7 +126,7 @@ export const SetupFamilyPage: React.FC = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="例: パパ、ママ、たろう"
-                className="glass-input rounded-2xl px-4 py-3 text-center text-sm font-bold text-wood-900 placeholder:text-wood-900/30"
+                className="glass-input rounded-2xl px-4 py-3 text-center text-base font-bold text-wood-900 placeholder:text-wood-900/30"
               />
             </div>
 
@@ -213,7 +213,7 @@ export const SetupFamilyPage: React.FC = () => {
                 value={familyName}
                 onChange={(e) => setFamilyName(e.target.value)}
                 placeholder="例: 山田家"
-                className="glass-input rounded-2xl px-4 py-3 text-center text-sm font-bold text-wood-900 placeholder:text-wood-900/30"
+                className="glass-input rounded-2xl px-4 py-3 text-center text-base font-bold text-wood-900 placeholder:text-wood-900/30"
               />
             </div>
 
@@ -257,7 +257,7 @@ export const SetupFamilyPage: React.FC = () => {
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                 placeholder="例: X5B9YT"
-                className="glass-input rounded-2xl px-4 py-3 text-center text-sm font-bold tracking-widest text-wood-900 placeholder:text-wood-900/30 font-mono"
+                className="glass-input rounded-2xl px-4 py-3 text-center text-base font-bold tracking-widest text-wood-900 placeholder:text-wood-900/30 font-mono"
               />
             </div>
 
