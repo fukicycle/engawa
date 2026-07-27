@@ -21,7 +21,7 @@ const getTitleTextClass = (size: 'small' | 'normal' | 'large') => {
 export const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  const { currentUser, userProfile, fontSize } = useAuth();
+  const { currentUser, userProfile, fontSize, switchFamily } = useAuth();
   
   const [post, setPost] = useState<Post | null>(null);
   const [linkedEvent, setLinkedEvent] = useState<CalendarEvent | null>(null);
@@ -61,6 +61,39 @@ export const PostDetailPage: React.FC = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Automatic Workspace Context Switching on Deep Link (Slack / Teams style)
+  useEffect(() => {
+    if (!postId || !userProfile?.families || !userProfile.activeFamilyId) return;
+
+    const resolvePostFamily = async () => {
+      try {
+        const familyIds = Object.keys(userProfile.families || {});
+        
+        // 1. If the post exists under the currently active family, we are already in the correct workspace!
+        const activePostSnap = await get(ref(database, `posts/${userProfile.activeFamilyId}/${postId}`));
+        if (activePostSnap.exists()) {
+          return;
+        }
+
+        // 2. Otherwise, search other joined families to find where the post is stored
+        for (const fid of familyIds) {
+          if (fid === userProfile.activeFamilyId) continue;
+          const snap = await get(ref(database, `posts/${fid}/${postId}`));
+          if (snap.exists()) {
+            // Found! Auto-switch active family workspace instantly and silently!
+            console.log(`Deep link workspace mismatch: Post ${postId} is in family ${fid}. Auto-switching!`);
+            await switchFamily(fid);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to resolve post family for dynamic switching:", err);
+      }
+    };
+
+    resolvePostFamily();
+  }, [postId, userProfile?.families, userProfile?.activeFamilyId, switchFamily]);
 
   useEffect(() => {
     if (!currentUser) {
