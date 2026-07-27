@@ -54,6 +54,11 @@ export const HomePage: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+  // Unread posts and in-app Notification States
+  const [readPosts, setReadPosts] = useState<Record<string, number>>({});
+  const [notifications, setNotifications] = useState<Record<string, any>>({});
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -66,9 +71,10 @@ export const HomePage: React.FC = () => {
   }, [currentUser, userProfile]);
 
   useEffect(() => {
-    if (!userProfile?.familyId) return;
+    if (!userProfile?.familyId || !currentUser) return;
 
     const familyId = userProfile.familyId;
+    const uid = currentUser.uid;
 
     // 1. Listen to Family Info
     const familyRef = ref(database, `families/${familyId}`);
@@ -125,12 +131,34 @@ export const HomePage: React.FC = () => {
       }
     });
 
+    // 4. Listen to User's Unread Posts Log
+    const readPostsRef = ref(database, `users/${uid}/readPosts`);
+    onValue(readPostsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setReadPosts(snapshot.val());
+      } else {
+        setReadPosts({});
+      }
+    });
+
+    // 5. Listen to User's In-App Notifications
+    const notificationsRef = ref(database, `userNotifications/${uid}`);
+    onValue(notificationsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setNotifications(snapshot.val());
+      } else {
+        setNotifications({});
+      }
+    });
+
     return () => {
       off(familyRef);
       off(postsRef);
       off(eventsRef);
+      off(readPostsRef);
+      off(notificationsRef);
     };
-  }, [userProfile?.familyId]);
+  }, [userProfile?.familyId, currentUser?.uid]);
 
   const handleVote = async (postId: string, optionId: string) => {
     if (!currentUser || !userProfile?.familyId) return;
@@ -206,6 +234,8 @@ export const HomePage: React.FC = () => {
     return days;
   };
 
+  const unreadNotifCount = Object.values(notifications).filter(n => !n.read).length;
+
   return (
     <div className="relative h-screen overflow-hidden pb-20 pt-4 px-4 max-w-md mx-auto flex flex-col gap-4">
       <LeafBackground />
@@ -234,6 +264,20 @@ export const HomePage: React.FC = () => {
               コード: {family.inviteCode}
             </button>
           )}
+
+          {/* Elegant Wind-chime / Notification Bell Button with unread count */}
+          <button
+            onClick={() => setIsNotificationDrawerOpen(true)}
+            className="w-9 h-9 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 text-engawa-600 flex items-center justify-center relative transition-all active:scale-95 shadow-sm"
+            title="通知一覧"
+          >
+            <BellIcon size={18} />
+            {unreadNotifCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white font-extrabold text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center border border-white animate-pulse">
+                {unreadNotifCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -312,12 +356,17 @@ export const HomePage: React.FC = () => {
                   hour: '2-digit',
                   minute: '2-digit',
                 });
+                const isUnread = !readPosts[post.id] || (post.lastReplyAt ? post.lastReplyAt > readPosts[post.id] : post.createdAt > readPosts[post.id]);
 
                 return (
                   <div
                     key={post.id}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group"
+                    className={`glass-card rounded-3xl p-5 border shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group ${
+                      isUnread
+                        ? 'border-engawa-500/40 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5 bg-white/45'
+                        : 'border-white/40'
+                    }`}
                   >
                     {/* Author & Timestamp */}
                     <div className="flex items-center justify-between">
@@ -338,10 +387,15 @@ export const HomePage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Type Badge */}
-                      <span className="text-[9px] font-bold tracking-widest px-2 py-1 rounded-lg bg-white/40 border border-white/50 text-engawa-600">
-                        {post.type === 'poll' ? '投票' : post.type === 'calendar' ? 'カレンダー' : '井戸端'}
-                      </span>
+                      {/* Type Badge & Unread Badge */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isUnread && (
+                          <span className="text-[8px] font-black tracking-wider px-1.5 py-0.5 rounded bg-red-500 text-white animate-pulse">新着</span>
+                        )}
+                        <span className="text-[9px] font-bold tracking-widest px-2 py-1 rounded-lg bg-white/40 border border-white/50 text-engawa-600">
+                          {post.type === 'poll' ? '投票' : post.type === 'calendar' ? 'カレンダー' : '井戸端'}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Content */}
@@ -664,6 +718,88 @@ export const HomePage: React.FC = () => {
         message={dialogMessage}
         onClose={() => setDialogOpen(false)}
       />
+
+      {/* 4. Sliding Glassmorphic In-App Notification Drawer */}
+      {isNotificationDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Transparent Backdrop with Blur */}
+          <div 
+            className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" 
+            onClick={() => setIsNotificationDrawerOpen(false)} 
+          />
+          
+          {/* Sliding Glassmorphic Panel */}
+          <div className="relative z-10 w-full max-w-xs h-full bg-white/20 backdrop-blur-md border-l border-white/20 shadow-2xl p-5 flex flex-col gap-4 animate-gentleSlideUp">
+            
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-wood-900/5 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="text-engawa-600"><BellIcon size={18} /></div>
+                <h3 className="text-sm font-extrabold text-engawa-800 tracking-wider font-soft">お知らせ履歴</h3>
+              </div>
+              <button 
+                onClick={() => setIsNotificationDrawerOpen(false)}
+                className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60 px-2 py-1 rounded-lg hover:bg-wood-900/5"
+              >
+                閉じる
+              </button>
+            </div>
+
+            {/* Notifications Scroll Area */}
+            <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 hide-scrollbar">
+              {Object.keys(notifications).length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center gap-2 text-wood-900/30 text-center py-12">
+                  <BellIcon size={32} className="opacity-20" />
+                  <p className="text-[10px] font-bold">まだお知らせはありません。</p>
+                </div>
+              ) : (
+                Object.values(notifications)
+                  .sort((a, b) => b.createdAt - a.createdAt)
+                  .map((notif) => {
+                    const notifDate = new Date(notif.createdAt).toLocaleDateString('ja-JP', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+
+                    return (
+                      <div
+                        key={notif.id}
+                        onClick={async () => {
+                          // 1. Mark notification as read in database
+                          if (currentUser) {
+                            await set(ref(database, `userNotifications/${currentUser.uid}/${notif.id}/read`), true);
+                          }
+                          // 2. Close drawer
+                          setIsNotificationDrawerOpen(false);
+                          // 3. Jump/Navigate directly to the deep-linked path (handles highlight scroll)
+                          navigate(notif.linkPath);
+                        }}
+                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col gap-1 hover:scale-[1.01] active:scale-[0.99] ${
+                          notif.read
+                            ? 'bg-white/20 border-white/30 text-wood-900/60'
+                            : 'bg-white/60 border-engawa-500/30 text-wood-900 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-xs font-extrabold ${notif.read ? 'text-wood-900/70' : 'text-engawa-800'}`}>
+                            {notif.title}
+                          </h4>
+                          {!notif.read && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                          )}
+                        </div>
+                        <p className="text-[11px] font-medium leading-relaxed truncate">{notif.body}</p>
+                        <span className="text-[8px] text-wood-900/30 font-bold mt-1">{notifDate}</span>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -47,6 +47,15 @@ export interface Post {
   editedAt?: number;
 }
 
+export interface UserNotification {
+  id: string;
+  title: string;
+  body: string;
+  linkPath: string; // e.g., /post/postId?msgId=msgId
+  read: boolean;
+  createdAt: number;
+}
+
 export interface Message {
   id: string;
   authorId: string;

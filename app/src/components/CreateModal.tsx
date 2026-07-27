@@ -96,8 +96,11 @@ export const CreateModal: React.FC<CreateModalProps> = ({
 
       const queueRef = ref(database, 'notificationQueue');
       const newQueueItemRef = push(queueRef);
+      const notifId = newQueueItemRef.key!;
+
+      // 1. Enqueue to background push notification queue (server processes this)
       await set(newQueueItemRef, {
-        id: newQueueItemRef.key,
+        id: notifId,
         familyId: userProfile.familyId,
         type,
         title,
@@ -106,6 +109,19 @@ export const CreateModal: React.FC<CreateModalProps> = ({
         linkPath,
         createdAt: Date.now(),
       });
+
+      // 2. Write to in-app notification list for each target family member
+      for (const targetUid in targetUids) {
+        const userNotifRef = ref(database, `userNotifications/${targetUid}/${notifId}`);
+        await set(userNotifRef, {
+          id: notifId,
+          title,
+          body,
+          linkPath,
+          read: false,
+          createdAt: Date.now()
+        });
+      }
     } catch (e) {
       console.error("Failed to enqueue notification:", e);
     }

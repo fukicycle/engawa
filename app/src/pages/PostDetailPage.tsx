@@ -24,6 +24,9 @@ export const PostDetailPage: React.FC = () => {
   const [customReaction, setCustomReaction] = useState('');
   const [isReactionOpen, setIsReactionOpen] = useState(false);
 
+  // States for deep link highlighting
+  const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+
   // States for Editing
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -57,6 +60,9 @@ export const PostDetailPage: React.FC = () => {
     if (!postId || !userProfile?.familyId) return;
 
     const familyId = userProfile.familyId;
+
+    // Record the user has read this post (clears unread state)
+    set(ref(database, `users/${currentUser.uid}/readPosts/${postId}`), Date.now());
 
     // 1. Fetch all family members for display names
     const familyMembersRef = ref(database, `families/${familyId}/members`);
@@ -139,6 +145,29 @@ export const PostDetailPage: React.FC = () => {
       off(reactionsRef);
     };
   }, [postId, userProfile?.familyId]);
+
+  // Deep-linking scroll to message and highlight
+  useEffect(() => {
+    if (!postLoading && messages.length > 0) {
+      const hash = window.location.hash;
+      const queryIdx = hash.indexOf('?');
+      if (queryIdx !== -1) {
+        const params = new URLSearchParams(hash.substring(queryIdx));
+        const targetMsgId = params.get('msgId');
+        if (targetMsgId) {
+          setHighlightedMsgId(targetMsgId);
+          setTimeout(() => {
+            const el = document.getElementById(`msg-${targetMsgId}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Remove highlight after 3.5 seconds for a gentle fading out of focus
+              setTimeout(() => setHighlightedMsgId(null), 3500);
+            }
+          }, 600);
+        }
+      }
+    }
+  }, [postLoading, messages.length]);
 
   // Prefill event title when "Add to Calendar" form opens
   useEffect(() => {
@@ -335,16 +364,33 @@ export const PostDetailPage: React.FC = () => {
       if (Object.keys(targetUids).length > 0) {
         const queueRef = ref(database, 'notificationQueue');
         const newQueueItemRef = push(queueRef);
+        const notifId = newQueueItemRef.key!;
+        const linkPathWithMsg = `/post/${postId}?msgId=${newMessageRef.key}`;
+
+        // 1. Write to background push queue
         await set(newQueueItemRef, {
-          id: newQueueItemRef.key,
+          id: notifId,
           familyId,
           type: 'new_reply',
           title: `返信: ${userProfile.name}さん`,
           body: newMessage.trim().substring(0, 40),
           targetUids,
-          linkPath: `/post/${postId}`,
+          linkPath: linkPathWithMsg,
           createdAt: Date.now(),
         });
+
+        // 2. Write to in-app notification list for each participant
+        for (const targetUid in targetUids) {
+          const userNotifRef = ref(database, `userNotifications/${targetUid}/${notifId}`);
+          await set(userNotifRef, {
+            id: notifId,
+            title: `返信: ${userProfile.name}さん`,
+            body: newMessage.trim().substring(0, 40),
+            linkPath: linkPathWithMsg,
+            read: false,
+            createdAt: Date.now()
+          });
+        }
       }
 
       setNewMessage('');
@@ -765,9 +811,14 @@ export const PostDetailPage: React.FC = () => {
               {messages.map((msg) => {
                 const isMe = msg.authorId === currentUser?.uid;
                 const msgAuthor = familyMembers[msg.authorId] || { name: msg.authorName, icon: msg.authorIcon };
+                const isHighlighted = msg.id === highlightedMsgId;
 
                 return (
-                  <div key={msg.id} className={`flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                  <div 
+                    key={msg.id} 
+                    id={`msg-${msg.id}`} 
+                    className={`flex items-start gap-2.5 transition-all duration-500 ${isMe ? 'flex-row-reverse' : ''}`}
+                  >
                     <img
                       src={msgAuthor.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${msg.authorId}`}
                       alt={msgAuthor.name}
@@ -775,10 +826,12 @@ export const PostDetailPage: React.FC = () => {
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
                       <span className="text-[9px] font-extrabold text-wood-900/40 mb-0.5">{msgAuthor.name}</span>
-                      <div className={`p-3 rounded-2xl text-xs font-medium leading-relaxed break-all ${
-                        isMe 
-                          ? 'bg-engawa-600 text-white rounded-tr-none shadow-sm shadow-engawa-600/10' 
-                          : 'bg-white/50 border border-white/40 text-wood-900 rounded-tl-none'
+                      <div className={`p-3 rounded-2xl text-xs font-medium leading-relaxed break-all transition-all duration-500 ${
+                        isHighlighted
+                          ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'
+                          : isMe 
+                            ? 'bg-engawa-600 text-white rounded-tr-none shadow-sm shadow-engawa-600/10' 
+                            : 'bg-white/50 border border-white/40 text-wood-900 rounded-tl-none'
                       }`}>
                         {msg.text}
                       </div>
