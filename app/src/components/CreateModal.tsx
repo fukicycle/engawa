@@ -3,6 +3,7 @@ import { ref, push, set, get } from 'firebase/database';
 import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { PostIcon, PollIcon, CalendarIcon, CloseIcon } from './Icons';
+import { encryptText } from '../utils/crypto';
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -177,12 +178,13 @@ export const CreateModal: React.FC<CreateModalProps> = ({
           authorName: userProfile.name,
           authorIcon: userProfile.icon || '',
           type: 'text',
-          content: postContent.trim(),
+          content: encryptText(postContent.trim()), // Encrypt post content!
           createdAt: Date.now(),
           participants: { [currentUser.uid]: true },
         };
 
         await set(newPostRef, postData);
+        // Note: Keep notifications queue payload human-readable so the server can push clear alerts instantly!
         await createNotification('new_post', `${userProfile.name}さんの投稿`, postContent.trim().substring(0, 40), `/post/${postId}`);
 
       } else if (activeTab === 'poll') {
@@ -199,7 +201,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
           const optionId = `opt_${idx}`;
           formattedOptions[optionId] = {
             id: optionId,
-            text: opt.trim(),
+            text: encryptText(opt.trim()), // Encrypt poll options!
           };
         });
 
@@ -209,7 +211,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
           authorName: userProfile.name,
           authorIcon: userProfile.icon || '',
           type: 'poll',
-          content: pollQuestion.trim(),
+          content: encryptText(pollQuestion.trim()), // Encrypt poll question content!
           createdAt: Date.now(),
           participants: { [currentUser.uid]: true },
           pollOptions: formattedOptions,
@@ -247,7 +249,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
             authorName: userProfile.name,
             authorIcon: userProfile.icon || '',
             type: 'calendar',
-            content: `予定「${eventTitle.trim()}」が追加されました。\n日付: ${eventDate}\n${eventDesc ? `メモ: ${eventDesc}` : ''}`,
+            content: encryptText(`予定「${eventTitle.trim()}」が追加されました。\n日付: ${eventDate}\n${eventDesc ? `メモ: ${eventDesc}` : ''}`), // Encrypt calendar discussion context!
             createdAt: Date.now(),
             participants: postParticipants,
             eventId: eventId,
@@ -257,8 +259,8 @@ export const CreateModal: React.FC<CreateModalProps> = ({
 
         const eventData = {
           id: eventId,
-          title: eventTitle.trim(),
-          description: eventDesc.trim() || '',
+          title: encryptText(eventTitle.trim()), // Encrypt calendar event title!
+          description: encryptText(eventDesc.trim() || ''), // Encrypt calendar event notes!
           date: eventDate,
           startTime: eventStartTime || '',
           endTime: eventEndTime || '',

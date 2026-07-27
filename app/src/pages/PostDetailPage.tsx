@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../components/Icons';
 import { Dialog } from '../components/Dialog';
+import { decryptText } from '../utils/crypto';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
 const getBodyTextClass = (_size: 'small' | 'normal' | 'large') => {
@@ -215,14 +216,14 @@ export const PostDetailPage: React.FC = () => {
   // Prefill event title when "Add to Calendar" form opens
   useEffect(() => {
     if (isCalendarFormOpen && post) {
-      setEventTitle(post.content.substring(0, 30).trim());
+      setEventTitle(decryptText(post.content).substring(0, 30).trim());
     }
   }, [isCalendarFormOpen, post]);
 
   // Prefill editContent when isEditing opens
   useEffect(() => {
     if (isEditing && post) {
-      setEditContent(post.content);
+      setEditContent(decryptText(post.content));
     }
   }, [isEditing, post]);
 
@@ -704,7 +705,7 @@ export const PostDetailPage: React.FC = () => {
             </form>
           ) : (
             <p className={`font-medium break-all whitespace-pre-line px-1 text-wood-900 ${getBodyTextClass(fontSize)}`}>
-              {post.content}
+              {decryptText(post.content)}
             </p>
           )}
 
@@ -726,7 +727,7 @@ export const PostDetailPage: React.FC = () => {
                         : 'bg-white/40 border-white/50 hover:bg-white/60 text-wood-900/70'
                     }`}
                   >
-                    <span>{opt.text}</span>
+                    <span>{decryptText(opt.text)}</span>
                     <span className="bg-white/60 px-1.5 py-0.5 rounded-md border border-white text-[9px]">
                       {voteCount} 票
                     </span>
@@ -931,7 +932,7 @@ export const PostDetailPage: React.FC = () => {
                             ? 'bg-engawa-600 text-white rounded-tr-none shadow-sm shadow-engawa-600/10' 
                             : 'bg-white/50 border border-white/40 text-wood-900 rounded-tl-none'
                       } ${getBodyTextClass(fontSize)}`}>
-                        {msg.text}
+                        {decryptText(msg.text)}
                       </div>
                       <span className="text-xs text-wood-900/75 font-bold mt-1">
                         {new Date(msg.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}

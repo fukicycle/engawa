@@ -14,6 +14,7 @@ import {
   BellIcon,
   CheckIcon
 } from '../components/Icons';
+import { decryptText } from '../utils/crypto';
 import type { Post, CalendarEvent, UserProfile, FamilyGroup } from '../types';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
@@ -465,7 +466,7 @@ export const HomePage: React.FC = () => {
 
                     {/* Content */}
                     <p className={`font-medium break-all whitespace-pre-line text-wood-900 ${getBodyTextClass(fontSize)}`}>
-                      {post.content}
+                      {decryptText(post.content)}
                     </p>
 
                     {/* Calendar Linked Post Card details */}
@@ -484,7 +485,7 @@ export const HomePage: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="text-xs font-extrabold text-engawa-800 truncate">{linkedEvent.title}</h5>
+                            <h5 className="text-xs font-extrabold text-engawa-800 truncate">{decryptText(linkedEvent.title)}</h5>
                             <p className="text-[9px] text-wood-900/80 font-bold mt-0.5">
                               {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
                             </p>
@@ -511,7 +512,7 @@ export const HomePage: React.FC = () => {
                                   : 'bg-white/40 border-white/50 hover:bg-white/60 text-wood-900/70'
                               }`}
                             >
-                              <span>{opt.text}</span>
+                              <span>{decryptText(opt.text)}</span>
                               <span className="bg-white/60 px-2 py-0.5 rounded-md border border-white text-[10px]">
                                 {voteCount} 票
                               </span>
@@ -627,7 +628,7 @@ export const HomePage: React.FC = () => {
                         className="p-3 rounded-2xl border border-white/45 bg-white/30 text-left cursor-pointer hover:bg-white/55 transition-all active:scale-[0.99]"
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-extrabold text-engawa-800">{ev.title}</h4>
+                          <h4 className="text-xs font-extrabold text-engawa-800">{decryptText(ev.title)}</h4>
                           {ev.startTime && (
                             <span className="text-[9px] font-bold bg-white/60 border border-white/50 text-engawa-600 px-2 py-0.5 rounded-md">
                               {ev.startTime} {ev.endTime ? `~ ${ev.endTime}` : ''}
@@ -635,7 +636,7 @@ export const HomePage: React.FC = () => {
                           )}
                         </div>
                         {ev.description && (
-                          <p className="text-[11px] text-wood-900/90 mt-1 line-clamp-2">{ev.description}</p>
+                          <p className="text-[11px] text-wood-900/90 mt-1 line-clamp-2">{decryptText(ev.description)}</p>
                         )}
                         
                         {/* 3-Limit Proportional Attendee Avatars Display with Other +X label */}
