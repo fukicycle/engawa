@@ -831,8 +831,15 @@ export const HomePage: React.FC = () => {
                 </div>
               ) : (
                 Object.values(notifications)
-                  .sort((a, b) => b.createdAt - a.createdAt)
-                  .map((notif) => {
+                  .sort((a: any, b: any) => {
+                    // 1. Unread (false) first, then Read (true)
+                    if (a.read !== b.read) {
+                      return a.read ? 1 : -1;
+                    }
+                    // 2. Newest first (createdAt descending)
+                    return b.createdAt - a.createdAt;
+                  })
+                  .map((notif: any) => {
                     const notifDate = new Date(notif.createdAt).toLocaleDateString('ja-JP', {
                       month: 'short',
                       day: 'numeric',
@@ -853,22 +860,40 @@ export const HomePage: React.FC = () => {
                           // 3. Jump/Navigate directly to the deep-linked path (handles highlight scroll)
                           navigate(notif.linkPath);
                         }}
-                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col gap-1 hover:scale-[1.01] active:scale-[0.99] ${
+                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col gap-1.5 hover:scale-[1.01] active:scale-[0.99] ${
                           notif.read
-                            ? 'bg-white/20 border-white/30 text-wood-900/60'
+                            ? 'bg-white/10 border-white/20 text-wood-900/50'
                             : 'bg-white/60 border-engawa-500/30 text-wood-900 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <h4 className={`text-xs font-extrabold ${notif.read ? 'text-wood-900/70' : 'text-engawa-800'}`}>
+                        <div className="flex items-start justify-between gap-1">
+                          <h4 className={`text-xs font-extrabold ${notif.read ? 'text-wood-900/60' : 'text-engawa-800'}`}>
                             {notif.title}
                           </h4>
                           {!notif.read && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1 animate-pulse" />
                           )}
                         </div>
                         <p className={`font-medium leading-relaxed truncate text-wood-900 ${getBodyTextClass(fontSize)}`}>{notif.body}</p>
-                        <span className="text-[8px] text-wood-900/30 font-bold mt-1">{notifDate}</span>
+                        
+                        {/* Dynamic manual read/unread toggle button & Date row */}
+                        <div className="flex items-center justify-between border-t border-wood-900/5 pt-2 mt-0.5" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-[8px] text-wood-900/30 font-bold">{notifDate}</span>
+                          <button
+                            onClick={async () => {
+                              if (currentUser) {
+                                await set(ref(database, `userNotifications/${currentUser.uid}/${notif.id}/read`), !notif.read);
+                              }
+                            }}
+                            className={`text-[8px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+                              notif.read
+                                ? 'bg-white/35 border-white/50 text-wood-900/40 hover:bg-white/55'
+                                : 'bg-engawa-600/15 border-engawa-500/25 text-engawa-800 hover:bg-engawa-600/25'
+                            }`}
+                          >
+                            {notif.read ? '未読にする' : '既読にする'}
+                          </button>
+                        </div>
                       </div>
                     );
                   })
