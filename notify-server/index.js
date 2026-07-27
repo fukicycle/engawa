@@ -77,11 +77,20 @@ queueRef.on('child_added', async (snapshot) => {
       }
 
       const subscription = subSnapshot.val();
-      
+
+      // Fetch user's current unread notifications count
+      const notifsSnapshot = await db.ref(`userNotifications/${uid}`).get();
+      let unreadCount = 0;
+      if (notifsSnapshot.exists()) {
+        const notifs = notifsSnapshot.val();
+        unreadCount = Object.values(notifs).filter(n => !n.read).length;
+      }
+
       // Payload schema
       const payload = JSON.stringify({
         title: item.title,
         body: item.body,
+        badgeCount: unreadCount,
         data: {
           linkPath: item.linkPath || '/'
         }

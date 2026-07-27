@@ -18,8 +18,23 @@ self.addEventListener('push', (event: any) => {
       data: data.data || {} // contains linkPath e.g., /post/post123
     };
 
+    // Update App Icon Badge Count in background if supported
+    const badgingPromise = (() => {
+      if ('setAppBadge' in navigator && data.badgeCount !== undefined) {
+        if (data.badgeCount > 0) {
+          return (navigator as any).setAppBadge(data.badgeCount);
+        } else {
+          return (navigator as any).clearAppBadge();
+        }
+      }
+      return Promise.resolve();
+    })();
+
     event.waitUntil(
-      self.registration.showNotification(title, options)
+      Promise.all([
+        self.registration.showNotification(title, options),
+        badgingPromise
+      ])
     );
   } catch (err) {
     console.error('Error handling push event:', err);
