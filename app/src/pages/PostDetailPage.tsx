@@ -390,19 +390,6 @@ export const PostDetailPage: React.FC = () => {
           linkPath: linkPathWithMsg,
           createdAt: Date.now(),
         });
-
-        // 2. Write to in-app notification list for each participant
-        for (const targetUid in targetUids) {
-          const userNotifRef = ref(database, `userNotifications/${targetUid}/${notifId}`);
-          await set(userNotifRef, {
-            id: notifId,
-            title: `返信: ${userProfile.name}さん`,
-            body: newMessage.trim().substring(0, 40),
-            linkPath: linkPathWithMsg,
-            read: false,
-            createdAt: Date.now()
-          });
-        }
       }
 
       setNewMessage('');
