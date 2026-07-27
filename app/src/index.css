@@ -24,36 +24,23 @@
   --backdrop-blur-lg: 4px;
 }
 
+/* 
+ * Force strict dynamic viewport sizing & completely disable global body scrolling 
+ * to guarantee an absolute native app-like fixed container experience.
+ */
+html, body, #root {
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Lock viewport background scrolling */
+}
+
 body {
   background-color: var(--color-wood-100);
   color: var(--color-wood-900);
   font-family: var(--font-soft);
-  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
   background-image: radial-gradient(circle at 10% 20%, rgba(245, 239, 230, 0.5) 0%, rgba(232, 223, 216, 0.7) 90.1%);
-}
-
-/* iOS Safari の date/time/month ピッカーの幅・高さ制御 */
-input[type="date"],
-input[type="time"],
-input[type="month"] {
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  appearance: none;
-  line-height: 1.25;
-  overflow: hidden;
-}
-
-/* 全フォーム要素のサイズ制御 */
-input, select, textarea {
-  overflow-wrap: normal;
-  box-sizing: border-box;
-  max-width: 100%;
-  line-height: 1.25;
 }
 
 /* 
@@ -127,7 +114,7 @@ input, select, textarea {
  * Replaced Elements (input, textarea) cannot render ::before pseudo-elements.
  * We apply background and backdrop-filter DIRECTLY to the input element itself.
  * We also increase normal opacity to 0.75 and focus opacity to 0.92 for pristine visibility.
- * Crucially, we set 'min-width: 0;' to bypass the CSS flexbox implicit shrink limit bug!
+ * Crucially, we set 'min-width: 0;' to bypass the CSS flexbox implicit shrink limit bug !
  */
 .glass-input {
   background: rgba(255, 255, 255, 0.75);

@@ -519,7 +519,7 @@ export const PostDetailPage: React.FC = () => {
   const isPostAuthor = currentUser?.uid === post.authorId;
 
   return (
-    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+76px)] max-w-md mx-auto flex flex-col gap-4 animate-gentleSlideUp">
+    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* INTEGRATED MASTER SINGLE-CARD */}
@@ -861,7 +861,7 @@ export const PostDetailPage: React.FC = () => {
       </div>
 
       {/* ERGONOMIC BOTTOM composite navigation & reply inputs bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 bg-transparent flex gap-2 items-center">
+      <div className="relative w-full z-40 px-0 pt-2 pb-1 bg-transparent flex gap-2 items-center shrink-0">
         {/* Thumb-reachable Circular Back Button */}
         <button
           onClick={() => navigate('/')}
