@@ -872,7 +872,7 @@ export const PostDetailPage: React.FC = () => {
         </button>
 
         {/* Message Compose Form */}
-        <form onSubmit={handleSendMessage} className="flex-1 flex gap-2 items-center">
+        <form onSubmit={handleSendMessage} className="flex-1 min-w-0 flex gap-2 items-center">
           <input
             type="text"
             required
