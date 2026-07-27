@@ -86,14 +86,16 @@ queueRef.on('child_added', async (snapshot) => {
         unreadCount = Object.values(notifs).filter(n => !n.read).length;
       }
 
-      // Ensure we increment by 1 to account for the newly delivered notification currently being written!
-      unreadCount = Math.max(unreadCount, 0) + 1;
+      // Calculate final badge count (DB unread + 1 new notification arriving right now)
+      const finalBadgeCount = unreadCount + 1;
+
+      console.log(`- UID: ${uid} | DB Unread Count: ${unreadCount} | Sending Badge Count: ${finalBadgeCount}`);
 
       // Payload schema
       const payload = JSON.stringify({
         title: item.title,
         body: item.body,
-        badgeCount: unreadCount,
+        badgeCount: finalBadgeCount,
         data: {
           linkPath: item.linkPath || '/'
         }
