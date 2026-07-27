@@ -32,8 +32,9 @@ self.addEventListener('notificationclick', (event: any) => {
   
   const linkPath = event.notification.data?.linkPath || '/';
   
-  // Construct destination URL with HashRouter path (e.g., /#/post/post123)
-  const targetUrl = new URL(`#${linkPath}`, self.location.origin).href;
+  // Dynamically resolve base subdirectory of sw.js to support hosting on GitHub Pages subfolders
+  const basePath = self.location.pathname.replace('sw.js', '');
+  const targetUrl = new URL(`${basePath}#${linkPath}`, self.location.origin).href;
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList: any[]) => {
