@@ -86,6 +86,9 @@ queueRef.on('child_added', async (snapshot) => {
         unreadCount = Object.values(notifs).filter(n => !n.read).length;
       }
 
+      // Ensure we increment by 1 to account for the newly delivered notification currently being written!
+      unreadCount = Math.max(unreadCount, 0) + 1;
+
       // Payload schema
       const payload = JSON.stringify({
         title: item.title,
