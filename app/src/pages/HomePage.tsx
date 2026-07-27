@@ -262,7 +262,7 @@ export const HomePage: React.FC = () => {
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
-      <header className="relative z-10 w-full glass rounded-2xl px-5 py-4 flex items-center justify-between border border-white/40 shadow-sm">
+      <header className="relative z-10 w-full bg-white/35 backdrop-blur-[4px] rounded-2xl px-5 py-4 flex items-center justify-between border border-white/25 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 border border-engawa-500/15">
             <HomeIcon size={20} />
@@ -311,7 +311,7 @@ export const HomePage: React.FC = () => {
             
             {/* Dynamic Notification Permission Guide */}
             {pushPermission === 'default' && showNotificationGuide && (
-              <div className="glass-card rounded-3xl p-5 border border-engawa-500/20 bg-engawa-50/20 flex flex-col gap-3">
+              <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-engawa-500/20 bg-engawa-50/20 flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-engawa-500/10 flex items-center justify-center text-engawa-600 shrink-0">
                     <BellIcon size={18} />
@@ -344,7 +344,7 @@ export const HomePage: React.FC = () => {
               // Beautiful Skeleton Cards with left-to-right shimmer glow!
               <div className="flex flex-col gap-4">
                 {[1, 2, 3].map((n) => (
-                  <div key={n} className="glass-card rounded-3xl p-5 border border-white/20 flex flex-col gap-4 overflow-hidden relative">
+                  <div key={n} className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/20 flex flex-col gap-4 overflow-hidden relative">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
                       <div className="flex flex-col gap-1.5 flex-1">
@@ -364,7 +364,7 @@ export const HomePage: React.FC = () => {
                 ))}
               </div>
             ) : posts.length === 0 ? (
-              <div className="glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/40">
+              <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/40 border border-white/20">
                 <LeafIcon size={40} className="opacity-30" />
                 <p className="text-xs font-bold tracking-wider">縁側は静かです。<br />新しい会話を始めてみましょう。</p>
               </div>
@@ -383,10 +383,10 @@ export const HomePage: React.FC = () => {
                   <div
                     key={post.id}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    className={`glass-card rounded-3xl p-5 border shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group ${
+                    className={`rounded-3xl p-5 border shadow-sm flex flex-col gap-3 hover:bg-white/30 cursor-pointer transition-all active:scale-[0.99] group bg-white/45 backdrop-blur-[4px] ${
                       isUnread
-                        ? 'border-engawa-500/40 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5 bg-white/45'
-                        : 'border-white/40'
+                        ? 'border-engawa-500/40 ring-1 ring-engawa-500/10 shadow shadow-engawa-500/5 bg-white/55'
+                        : 'border-white/30'
                     }`}
                   >
                     {/* Author & Timestamp */}
@@ -505,7 +505,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Elegant Calendar Card */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-4">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
                   <button
@@ -545,7 +545,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Event Agenda Card for Selected Date */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
                   {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
@@ -603,7 +603,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col gap-4 animate-gentleSlideUp">
             
             {/* Profile Detail */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex items-center justify-between">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img
                   src={userProfile?.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser?.uid}`}
@@ -624,7 +624,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Notification Settings */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <div className="text-engawa-600"><BellIcon size={18} /></div>
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">通知の設定</h3>
@@ -662,7 +662,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Font Size Settings */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-engawa-600 font-soft">Aa</span>
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">文字サイズの変更</h3>
@@ -689,7 +689,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Family Members List */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-3">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
                 {family?.name || '家族'} のメンバー
               </h3>
@@ -714,7 +714,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Invitation Code Card */}
-            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3 text-center">
+            <div className="bg-white/45 backdrop-blur-[4px] rounded-3xl p-5 border border-white/30 shadow-sm flex flex-col gap-3 text-center">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">家族の追加</h3>
               <p className="text-[11px] text-wood-900/60 leading-relaxed px-2">
                 まだ縁側にいない家族を招待しましょう。<br />このコードを教えて「招待コードで参加」からログインしてもらいます。
