@@ -16,6 +16,7 @@ export const PostDetailPage: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [linkedEvent, setLinkedEvent] = useState<CalendarEvent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [postLoading, setPostLoading] = useState(true);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [familyMembers, setFamilyMembers] = useState<Record<string, UserProfile>>({});
   
@@ -89,10 +90,14 @@ export const PostDetailPage: React.FC = () => {
             if (evSnapshot.exists()) {
               setLinkedEvent(evSnapshot.val() as CalendarEvent);
             }
+            setPostLoading(false);
           });
+        } else {
+          setPostLoading(false);
         }
       } else {
         setPost(null);
+        setPostLoading(false);
       }
     });
 
@@ -377,6 +382,66 @@ export const PostDetailPage: React.FC = () => {
       console.error(err);
     }
   };
+
+  if (postLoading) {
+    return (
+      <div className="relative h-screen overflow-hidden pt-4 px-4 pb-20 max-w-md mx-auto flex flex-col gap-4 animate-gentleFadeIn">
+        <LeafBackground />
+        
+        {/* Skeleton Master Card */}
+        <div className="relative z-10 glass-card rounded-3xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
+          
+          {/* Skeleton Post Header */}
+          <div className="p-5 flex flex-col gap-4 shrink-0 bg-white/20 border-b border-wood-900/5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
+              <div className="flex flex-col gap-1.5 flex-1">
+                <div className="w-20 h-3 rounded skeleton-shimmer" />
+                <div className="w-28 h-2 rounded skeleton-shimmer" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 mt-1">
+              <div className="w-full h-4 rounded skeleton-shimmer" />
+              <div className="w-4/5 h-4 rounded skeleton-shimmer" />
+            </div>
+            <div className="flex border-t border-wood-900/5 pt-3 mt-1 justify-between">
+              <div className="w-20 h-3 rounded skeleton-shimmer" />
+              <div className="w-16 h-3 rounded skeleton-shimmer" />
+            </div>
+          </div>
+
+          {/* Skeleton Replies Container */}
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5 bg-white/5">
+            <div className="w-24 h-3 rounded skeleton-shimmer" />
+            
+            <div className="flex gap-2.5 items-start">
+              <div className="w-7 h-7 rounded-full skeleton-shimmer shrink-0" />
+              <div className="flex flex-col gap-1 flex-1">
+                <div className="w-16 h-2 rounded skeleton-shimmer" />
+                <div className="w-3/5 h-8 rounded-2xl skeleton-shimmer" />
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 items-start flex-row-reverse">
+              <div className="w-7 h-7 rounded-full skeleton-shimmer shrink-0" />
+              <div className="flex flex-col gap-1 items-end flex-1">
+                <div className="w-16 h-2 rounded skeleton-shimmer" />
+                <div className="w-1/2 h-8 rounded-2xl skeleton-shimmer" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Skeleton Bottom Navigation bar */}
+        <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto flex gap-2 items-center">
+          <div className="w-12 h-12 rounded-full skeleton-shimmer shrink-0" />
+          <div className="flex-1 h-12 rounded-2xl skeleton-shimmer" />
+          <div className="w-12 h-12 rounded-full skeleton-shimmer shrink-0" />
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (

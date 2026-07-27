@@ -40,6 +40,7 @@ export const HomePage: React.FC = () => {
   const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showNotificationGuide, setShowNotificationGuide] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
 
   // Dialog States
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,6 +107,7 @@ export const HomePage: React.FC = () => {
       } else {
         setPosts([]);
       }
+      setPostsLoading(false);
     });
 
     // 3. Listen to Calendar Events
@@ -273,7 +275,30 @@ export const HomePage: React.FC = () => {
               </div>
             )}
 
-            {posts.length === 0 ? (
+            {postsLoading ? (
+              // Beautiful Skeleton Cards with left-to-right shimmer glow!
+              <div className="flex flex-col gap-4">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="glass-card rounded-3xl p-5 border border-white/20 flex flex-col gap-4 overflow-hidden relative">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
+                      <div className="flex flex-col gap-1.5 flex-1">
+                        <div className="w-24 h-3 rounded skeleton-shimmer" />
+                        <div className="w-16 h-2 rounded skeleton-shimmer" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2.5 mt-1">
+                      <div className="w-full h-4 rounded skeleton-shimmer" />
+                      <div className="w-5/6 h-4 rounded skeleton-shimmer" />
+                    </div>
+                    <div className="border-t border-wood-900/5 pt-2.5 mt-2 flex justify-between">
+                      <div className="w-16 h-3 rounded skeleton-shimmer" />
+                      <div className="w-20 h-3 rounded skeleton-shimmer" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : posts.length === 0 ? (
               <div className="glass-card rounded-3xl p-8 text-center flex flex-col items-center gap-3 text-wood-900/40">
                 <LeafIcon size={40} className="opacity-30" />
                 <p className="text-xs font-bold tracking-wider">縁側は静かです。<br />新しい会話を始めてみましょう。</p>
