@@ -39,6 +39,10 @@ export const CreateModal: React.FC<CreateModalProps> = ({
   const [eventDesc, setEventDesc] = useState('');
   const [createLinkedPost, setCreateLinkedPost] = useState(true);
 
+  // Attendees selection states
+  const [familyMembers, setFamilyMembers] = useState<Record<string, {name: string, icon?: string}>>({});
+  const [selectedAttendees, setSelectedAttendees] = useState<Record<string, boolean>>({});
+
   // Set active tab and prefill date when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +54,42 @@ export const CreateModal: React.FC<CreateModalProps> = ({
       }
     }
   }, [isOpen, defaultTab, initialDate]);
+
+  // Load family members for initial attendees selection
+  useEffect(() => {
+    if (!isOpen || !userProfile?.activeFamilyId) return;
+
+    const fetchMembers = async () => {
+      try {
+        const familySnapshot = await get(ref(database, `families/${userProfile.activeFamilyId}`));
+        if (familySnapshot.exists()) {
+          const familyData = familySnapshot.val();
+          const memberIds = Object.keys(familyData.members || {});
+          
+          const profiles: Record<string, {name: string, icon?: string}> = {};
+          await Promise.all(
+            memberIds.map(async (uid) => {
+              const userSnapshot = await get(ref(database, `users/${uid}`));
+              if (userSnapshot.exists()) {
+                const userData = userSnapshot.val();
+                profiles[uid] = { name: userData.name, icon: userData.icon };
+              }
+            })
+          );
+          setFamilyMembers(profiles);
+          
+          // Pre-select the creator (logged-in user) by default!
+          if (currentUser) {
+            setSelectedAttendees({ [currentUser.uid]: true });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load family members for event creation:", err);
+      }
+    };
+
+    fetchMembers();
+  }, [isOpen, userProfile?.activeFamilyId, currentUser?.uid]);
 
   if (!isOpen) return null;
 
@@ -193,6 +233,14 @@ export const CreateModal: React.FC<CreateModalProps> = ({
           const newPostRef = push(postsRef);
           linkedPostId = newPostRef.key!;
 
+          // Build post participants map from selected attendees
+          const postParticipants = { [currentUser.uid]: true };
+          for (const uid in selectedAttendees) {
+            if (selectedAttendees[uid]) {
+              postParticipants[uid] = true;
+            }
+          }
+
           const postData = {
             id: linkedPostId,
             authorId: currentUser.uid,
@@ -201,7 +249,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
             type: 'calendar',
             content: `予定「${eventTitle.trim()}」が追加されました。\n日付: ${eventDate}\n${eventDesc ? `メモ: ${eventDesc}` : ''}`,
             createdAt: Date.now(),
-            participants: { [currentUser.uid]: true },
+            participants: postParticipants,
             eventId: eventId,
           };
           await set(newPostRef, postData);
@@ -216,6 +264,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
           endTime: eventEndTime || '',
           authorId: currentUser.uid,
           linkedPostId: linkedPostId,
+          attendees: selectedAttendees,
         };
 
         await set(newEventRef, eventData);
@@ -415,6 +464,42 @@ export const CreateModal: React.FC<CreateModalProps> = ({
                   placeholder="持ち物や場所など..."
                   className="w-full glass-input rounded-2xl px-4 py-3 text-base text-wood-900 placeholder:text-wood-900/30 resize-none"
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5 mt-1 border-t border-wood-900/5 pt-3">
+                <label className="text-[10px] font-bold text-engawa-800 tracking-wider">参加者（複数選択可）</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {Object.keys(familyMembers).map((uid) => {
+                    const member = familyMembers[uid];
+                    const isSelected = selectedAttendees[uid] === true;
+                    
+                    return (
+                      <button
+                        type="button"
+                        key={uid}
+                        onClick={() => {
+                          setSelectedAttendees(prev => ({
+                            ...prev,
+                            [uid]: !prev[uid]
+                          }));
+                        }}
+                        className={`px-3 py-1.5 rounded-full border text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+                          isSelected
+                            ? 'bg-engawa-600/10 border-engawa-500/35 text-engawa-800'
+                            : 'bg-white/40 border-white/50 text-wood-900/60'
+                        }`}
+                      >
+                        <img
+                          src={member.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`}
+                          alt={member.name}
+                          className="w-5 h-5 rounded-full bg-white/50 border border-white/20"
+                        />
+                        <span>{member.name}</span>
+                        {isSelected && <span className="text-engawa-600 text-[10px]">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer mt-1 select-none">

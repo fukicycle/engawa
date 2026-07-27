@@ -84,6 +84,7 @@ export interface CalendarEvent {
   endTime?: string; // HH:MM
   authorId: string;
   linkedPostId?: string; // optional link to a discussion post
+  attendees?: Record<string, boolean>; // Map of participant UIDs (uid -> true)
 }
 
 export interface PushSubscriptionData {

@@ -554,23 +554,91 @@ export const PostDetailPage: React.FC = () => {
 
           {/* Calendar Linked Event Banner (if present and calendar-type) */}
           {post.type === 'calendar' && linkedEvent && (
-            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/40 border border-white/50 shadow-sm">
-              <div className="w-12 h-14 bg-white rounded-xl border border-wood-300 shadow flex flex-col items-center overflow-hidden shrink-0">
-                <div className="w-full bg-red-500 text-white text-[8px] font-bold py-0.5 text-center tracking-widest">
-                  {linkedEvent.date.split('-')[1]}月
+            <div className="flex flex-col gap-3 p-3 rounded-2xl bg-white/40 border border-white/50 shadow-sm">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-14 bg-white rounded-xl border border-wood-300 shadow flex flex-col items-center overflow-hidden shrink-0">
+                  <div className="w-full bg-red-500 text-white text-[8px] font-bold py-0.5 text-center tracking-widest">
+                    {linkedEvent.date.split('-')[1]}月
+                  </div>
+                  <div className="text-wood-900 font-black text-lg leading-none mt-1">
+                    {parseInt(linkedEvent.date.split('-')[2])}
+                  </div>
                 </div>
-                <div className="text-wood-900 font-black text-lg leading-none mt-1">
-                  {parseInt(linkedEvent.date.split('-')[2])}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[8px] font-bold tracking-widest bg-engawa-100 text-engawa-700 px-2 py-0.5 rounded-md border border-engawa-500/10">
+                    暦の予定
+                  </span>
+                  <h3 className="text-xs font-extrabold text-engawa-800 truncate mt-0.5">{linkedEvent.title}</h3>
+                  <p className="text-[9px] text-wood-900/90 font-bold mt-0.5">
+                    時間: {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
+                  </p>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-bold tracking-widest bg-engawa-100 text-engawa-700 px-2 py-0.5 rounded-md border border-engawa-500/10">
-                  暦の予定
-                </span>
-                <h3 className="text-xs font-extrabold text-engawa-800 truncate mt-0.5">{linkedEvent.title}</h3>
-                <p className="text-[9px] text-wood-900/90 font-bold mt-0.5">
-                  時間: {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
-                </p>
+
+              {/* Event Attendees Roster & In-Context Toggle button */}
+              <div className="border-t border-wood-900/5 pt-2.5 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-wood-900/60">参加予定のメンバー:</span>
+                  {currentUser && (() => {
+                    const attendeesMap = linkedEvent.attendees || {};
+                    const isAttending = attendeesMap[currentUser.uid] === true;
+                    
+                    return (
+                      <button
+                        onClick={async () => {
+                          if (!userProfile?.activeFamilyId) return;
+                          const attendeeRef = ref(database, `calendarEvents/${userProfile.activeFamilyId}/${linkedEvent.id}/attendees/${currentUser.uid}`);
+                          await set(attendeeRef, !isAttending);
+                          
+                          // Dynamically refresh local state in PostDetailPage!
+                          setLinkedEvent(prev => {
+                            if (!prev) return null;
+                            return {
+                              ...prev,
+                              attendees: {
+                                ...(prev.attendees || {}),
+                                [currentUser.uid]: !isAttending
+                              }
+                            };
+                          });
+                        }}
+                        className={`text-[8px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+                          isAttending
+                            ? 'bg-red-500/10 border-red-500/20 text-red-700'
+                            : 'bg-engawa-600 border-transparent text-white'
+                        }`}
+                      >
+                        {isAttending ? '不参加にする' : '参加する'}
+                      </button>
+                    );
+                  })()}
+                </div>
+
+                {/* Avatars of participants */}
+                <div className="flex flex-wrap gap-1.5 mt-0.5">
+                  {(() => {
+                    const attendeesMap = linkedEvent.attendees || {};
+                    const attendeeUids = Object.keys(attendeesMap).filter(uid => attendeesMap[uid] === true);
+                    
+                    if (attendeeUids.length === 0) {
+                      return <span className="text-[9px] text-wood-900/40 font-bold">誰も参加予定ではありません</span>;
+                    }
+                    
+                    return attendeeUids.map((uid) => {
+                      const member = familyMembers[uid] || { name: '...', icon: '' };
+                      return (
+                        <div key={uid} className="flex items-center gap-1 bg-white/40 border border-white/60 px-2 py-0.5 rounded-full" title={member.name}>
+                          <img
+                            src={member.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`}
+                            alt={member.name}
+                            className="w-4.5 h-4.5 rounded-full border border-white/20 bg-white/50"
+                          />
+                          <span className="text-[9px] font-bold text-wood-900/80">{member.name}</span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
               </div>
             </div>
           )}

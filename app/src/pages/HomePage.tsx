@@ -62,6 +62,10 @@ export const HomePage: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+  // Event Detail Dialog States
+  const [selectedDetailEvent, setSelectedDetailEvent] = useState<CalendarEvent | null>(null);
+  const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
+
   // Unread posts and in-app Notification States
   const [readPosts, setReadPosts] = useState<Record<string, number>>({});
   const [notifications, setNotifications] = useState<Record<string, any>>({});
@@ -606,32 +610,66 @@ export const HomePage: React.FC = () => {
                 <p className="text-xs text-wood-900/75 font-bold py-4 text-center">この日の予定はありません。</p>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {selectedDateEvents.map((ev) => (
-                    <div
-                      key={ev.id}
-                      onClick={() => ev.linkedPostId && navigate(`/post/${ev.linkedPostId}`)}
-                      className={`p-3 rounded-2xl border border-white/40 bg-white/30 text-left ${
-                        ev.linkedPostId ? 'cursor-pointer hover:bg-white/50' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-extrabold text-engawa-800">{ev.title}</h4>
-                        {ev.startTime && (
-                          <span className="text-[9px] font-bold bg-white/60 border border-white/50 text-engawa-600 px-2 py-0.5 rounded-md">
-                            {ev.startTime} {ev.endTime ? `~ ${ev.endTime}` : ''}
-                          </span>
+                  {selectedDateEvents.map((ev) => {
+                    const attendeeIds = Object.keys(ev.attendees || {}).filter(uid => ev.attendees?.[uid] === true);
+                    
+                    return (
+                      <div
+                        key={ev.id}
+                        onClick={() => {
+                          if (ev.linkedPostId) {
+                            navigate(`/post/${ev.linkedPostId}`);
+                          } else {
+                            setSelectedDetailEvent(ev);
+                            setIsEventDetailOpen(true);
+                          }
+                        }}
+                        className="p-3 rounded-2xl border border-white/45 bg-white/30 text-left cursor-pointer hover:bg-white/55 transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-extrabold text-engawa-800">{ev.title}</h4>
+                          {ev.startTime && (
+                            <span className="text-[9px] font-bold bg-white/60 border border-white/50 text-engawa-600 px-2 py-0.5 rounded-md">
+                              {ev.startTime} {ev.endTime ? `~ ${ev.endTime}` : ''}
+                            </span>
+                          )}
+                        </div>
+                        {ev.description && (
+                          <p className="text-[11px] text-wood-900/90 mt-1 line-clamp-2">{ev.description}</p>
+                        )}
+                        
+                        {/* 3-Limit Proportional Attendee Avatars Display with Other +X label */}
+                        {attendeeIds.length > 0 && (
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <div className="flex -space-x-1.5 overflow-hidden">
+                              {attendeeIds.slice(0, 3).map((uid) => {
+                                const member = familyMembers[uid] || { name: '...', icon: '' };
+                                return (
+                                  <img
+                                    key={uid}
+                                    src={member.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`}
+                                    alt={member.name}
+                                    className="inline-block h-5 w-5 rounded-full ring-2 ring-white bg-white/50 border border-white/10"
+                                    title={member.name}
+                                  />
+                                );
+                              })}
+                            </div>
+                            <span className="text-[10px] text-wood-900/70 font-bold">
+                              {attendeeIds.length > 3 ? `他${attendeeIds.length - 3}名` : ''}
+                              <span>が参加予定</span>
+                            </span>
+                          </div>
+                        )}
+
+                        {ev.linkedPostId && (
+                          <div className="text-[9px] font-extrabold text-engawa-600 mt-2 hover:underline">
+                            → 縁側での話を見る
+                          </div>
                         )}
                       </div>
-                      {ev.description && (
-                        <p className="text-[11px] text-wood-900/90 mt-1">{ev.description}</p>
-                      )}
-                      {ev.linkedPostId && (
-                        <div className="text-[9px] font-extrabold text-engawa-600 mt-2 hover:underline">
-                          → 縁側での話を見る
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -985,6 +1023,119 @@ export const HomePage: React.FC = () => {
               <span>+</span>
               <span>新しい家族を登録・参加</span>
             </button>
+
+          </div>
+        </div>
+      )}
+
+      {/* 6. Sliding Glassmorphic Event Detail Dialog Overlay */}
+      {isEventDetailOpen && selectedDetailEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop with Blur */}
+          <div 
+            className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" 
+            onClick={() => setIsEventDetailOpen(false)} 
+          />
+          
+          {/* Detailed Dialog Box */}
+          <div className="relative z-10 w-full max-w-[310px] glass-card rounded-2xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
+              <h3 className="text-sm font-extrabold text-engawa-800 tracking-wider font-soft">予定の詳細</h3>
+              <button 
+                onClick={() => setIsEventDetailOpen(false)}
+                className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Event Info */}
+            <div className="flex flex-col gap-2.5">
+              <div>
+                <h4 className="text-base font-extrabold text-engawa-800">{selectedDetailEvent.title}</h4>
+                <p className="text-xs text-wood-900/80 font-bold mt-1">
+                  📅 {selectedDetailEvent.date}
+                  {selectedDetailEvent.startTime ? ` | ⏰ ${selectedDetailEvent.startTime}${selectedDetailEvent.endTime ? ` ~ ${selectedDetailEvent.endTime}` : ''}` : ' | ⏰ 終日'}
+                </p>
+              </div>
+
+              {selectedDetailEvent.description && (
+                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/20 p-3 rounded-xl border border-white/30 whitespace-pre-line">
+                  {selectedDetailEvent.description}
+                </p>
+              )}
+
+              {/* Attendees list */}
+              <div className="flex flex-col gap-1.5 mt-1">
+                <label className="text-[10px] font-bold text-engawa-800 tracking-wider">参加メンバー</label>
+                <div className="flex flex-col gap-2 bg-white/10 p-2.5 rounded-xl border border-white/20">
+                  {(() => {
+                    const attendeesMap = selectedDetailEvent.attendees || {};
+                    const attendeeUids = Object.keys(attendeesMap).filter(uid => attendeesMap[uid] === true);
+                    
+                    if (attendeeUids.length === 0) {
+                      return <p className="text-[10px] text-wood-900/40 font-bold py-1 text-center">まだ参加予定のメンバーはいません</p>;
+                    }
+                    
+                    return attendeeUids.map((uid) => {
+                      const member = familyMembers[uid] || { name: '...', icon: '' };
+                      return (
+                        <div key={uid} className="flex items-center gap-2.5">
+                          <img
+                            src={member.icon || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`}
+                            alt={member.name}
+                            className="w-6 h-6 rounded-full bg-white/50 border border-white/20"
+                          />
+                          <span className="text-xs font-bold text-wood-900/90">{member.name}</span>
+                          {uid === selectedDetailEvent.authorId && (
+                            <span className="text-[8px] font-bold bg-engawa-100 text-engawa-700 border border-engawa-500/10 px-1 py-0.5 rounded ml-auto">主催</span>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance Toggle Button */}
+            {currentUser && (() => {
+              const attendeesMap = selectedDetailEvent.attendees || {};
+              const isAttending = attendeesMap[currentUser.uid] === true;
+              
+              return (
+                <button
+                  onClick={async () => {
+                    if (!userProfile?.activeFamilyId) return;
+                    const eventId = selectedDetailEvent.id;
+                    const attendeeRef = ref(database, `calendarEvents/${userProfile.activeFamilyId}/${eventId}/attendees/${currentUser.uid}`);
+                    
+                    // Toggle in database
+                    await set(attendeeRef, !isAttending);
+                    
+                    // Refresh selectedDetailEvent in local state dynamically!
+                    setSelectedDetailEvent(prev => {
+                      if (!prev) return null;
+                      return {
+                        ...prev,
+                        attendees: {
+                          ...(prev.attendees || {}),
+                          [currentUser.uid]: !isAttending
+                        }
+                      };
+                    });
+                  }}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all active:scale-95 border ${
+                    isAttending
+                      ? 'bg-red-500/10 border-red-500/20 text-red-700 hover:bg-red-500/15'
+                      : 'bg-engawa-600 hover:bg-engawa-700 border-transparent text-white shadow shadow-engawa-600/15'
+                  }`}
+                >
+                  {isAttending ? '参加を取り消す' : 'この予定に参加する'}
+                </button>
+              );
+            })()}
 
           </div>
         </div>
