@@ -4,8 +4,8 @@ import { ref, onValue, off, push, set, get } from 'firebase/database';
 import { database } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
-import { ArrowLeftIcon, SendIcon, PostIcon, LeafIcon } from '../components/Icons';
-import { Post, Message, Reaction, UserProfile } from '../types';
+import { ArrowLeftIcon, SendIcon, LeafIcon } from '../components/Icons';
+import type { Post, Message, Reaction, UserProfile } from '../types';
 
 export const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -20,7 +20,6 @@ export const PostDetailPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [customReaction, setCustomReaction] = useState('');
   const [isReactionOpen, setIsReactionOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -57,7 +56,7 @@ export const PostDetailPage: React.FC = () => {
 
     // 2. Listen to Post Detail
     const postRef = ref(database, `posts/${familyId}/${postId}`);
-    const unsubscribePost = onValue(postRef, (snapshot) => {
+    onValue(postRef, (snapshot) => {
       if (snapshot.exists()) {
         setPost(snapshot.val() as Post);
       } else {
@@ -67,7 +66,7 @@ export const PostDetailPage: React.FC = () => {
 
     // 3. Listen to Messages
     const messagesRef = ref(database, `messages/${postId}`);
-    const unsubscribeMessages = onValue(messagesRef, (snapshot) => {
+    onValue(messagesRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const list: Message[] = Object.keys(data).map((key) => ({
@@ -84,7 +83,7 @@ export const PostDetailPage: React.FC = () => {
 
     // 4. Listen to Reactions
     const reactionsRef = ref(database, `reactions/${postId}`);
-    const unsubscribeReactions = onValue(reactionsRef, (snapshot) => {
+    onValue(reactionsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const list: Reaction[] = Object.keys(data).map((key) => ({

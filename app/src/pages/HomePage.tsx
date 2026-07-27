@@ -8,15 +8,10 @@ import { Navigation } from '../components/Navigation';
 import { CreateModal } from '../components/CreateModal';
 import { 
   HomeIcon, 
-  CalendarIcon, 
-  UserIcon, 
   LogOutIcon, 
-  PollIcon, 
-  CheckIcon, 
-  BellIcon,
   LeafIcon 
 } from '../components/Icons';
-import { Post, CalendarEvent, UserProfile, FamilyGroup } from '../types';
+import type { Post, CalendarEvent, UserProfile, FamilyGroup } from '../types';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +45,7 @@ export const HomePage: React.FC = () => {
 
     // 1. Listen to Family Info
     const familyRef = ref(database, `families/${familyId}`);
-    const unsubscribeFamily = onValue(familyRef, async (snapshot) => {
+    onValue(familyRef, async (snapshot) => {
       if (snapshot.exists()) {
         const familyData = snapshot.val() as FamilyGroup;
         setFamily(familyData);
@@ -72,7 +67,7 @@ export const HomePage: React.FC = () => {
 
     // 2. Listen to Posts
     const postsRef = ref(database, `posts/${familyId}`);
-    const unsubscribePosts = onValue(postsRef, (snapshot) => {
+    onValue(postsRef, (snapshot) => {
       if (snapshot.exists()) {
         const postsData = snapshot.val();
         const postsList: Post[] = Object.keys(postsData).map((key) => ({
@@ -89,7 +84,7 @@ export const HomePage: React.FC = () => {
 
     // 3. Listen to Calendar Events
     const eventsRef = ref(database, `calendarEvents/${familyId}`);
-    const unsubscribeEvents = onValue(eventsRef, (snapshot) => {
+    onValue(eventsRef, (snapshot) => {
       if (snapshot.exists()) {
         const eventsData = snapshot.val();
         const eventsList: CalendarEvent[] = Object.keys(eventsData).map((key) => ({

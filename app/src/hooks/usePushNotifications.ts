@@ -15,7 +15,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export const usePushNotifications = () => {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
 

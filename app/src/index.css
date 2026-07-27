@@ -1,14 +1,37 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-wood-50: #faf8f5;
+  --color-wood-100: #f5efe6;
+  --color-wood-200: #e8dfd8;
+  --color-wood-300: #dfd3c3;
+  --color-wood-400: #c4b5a6;
+  --color-wood-900: #4a3c31;
 
-@layer base {
-  body {
-    @apply bg-wood-100 text-wood-900 font-soft min-h-screen selection:bg-engawa-100 selection:text-engawa-800 antialiased overflow-x-hidden;
-    background-image: radial-gradient(circle at 10% 20%, rgba(245, 239, 230, 0.5) 0%, rgba(232, 223, 216, 0.7) 90.1%);
-  }
+  --color-engawa-50: #f4f7f2;
+  --color-engawa-100: #e8efe5;
+  --color-engawa-500: #526e47;
+  --color-engawa-600: #3e532b;
+  --color-engawa-700: #2c3e1c;
+  --color-engawa-800: #1d2a13;
+  --color-engawa-900: #101a0a;
+
+  --font-soft: "Zen Maru Gothic", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
+  
+  --backdrop-blur-xs: 2px;
+  --backdrop-blur-md: 8px;
+  --backdrop-blur-lg: 12px;
+}
+
+body {
+  background-color: var(--color-wood-100);
+  color: var(--color-wood-900);
+  font-family: var(--font-soft);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  background-image: radial-gradient(circle at 10% 20%, rgba(245, 239, 230, 0.5) 0%, rgba(232, 223, 216, 0.7) 90.1%);
 }
 
 /* Glassmorphism Classes */

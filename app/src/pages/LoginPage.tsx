@@ -6,13 +6,11 @@ import {
   signInWithPopup 
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { HomeIcon } from '../components/Icons';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

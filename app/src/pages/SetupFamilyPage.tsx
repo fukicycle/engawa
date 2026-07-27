@@ -6,7 +6,7 @@ import { UserIcon, PlusIcon, CheckIcon } from '../components/Icons';
 
 export const SetupFamilyPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile, updateProfileName, createFamily, joinFamily, refreshProfile } = useAuth();
+  const { currentUser, userProfile, updateProfileName, createFamily, joinFamily } = useAuth();
   
   const [displayName, setDisplayName] = useState('');
   const [familyName, setFamilyName] = useState('');

@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { ref, get, set } from 'firebase/database';
 import { auth, database } from '../firebase';
-import { UserProfile } from '../types';
+import type { UserProfile } from '../types';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -84,18 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const joinFamily = async (inviteCode: string) => {
     if (!currentUser || !userProfile) throw new Error("Authentication required");
     
-    // Find family by invite code
+        // Find family by invite code
     const familiesRef = ref(database, 'families');
     const snapshot = await get(familiesRef);
     let targetFamilyId = '';
-    let targetFamilyName = '';
 
     if (snapshot.exists()) {
       const familiesData = snapshot.val();
       for (const fid in familiesData) {
         if (familiesData[fid].inviteCode === inviteCode.trim()) {
           targetFamilyId = fid;
-          targetFamilyName = familiesData[fid].name;
           break;
         }
       }
