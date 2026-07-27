@@ -321,17 +321,19 @@ export const HomePage: React.FC = () => {
             </button>
           )}
 
-          {/* Elegant Wind-chime / Notification Bell Button with unread count */}
+          {/* Elegant Wind-chime / Notification Bell Button with gentle water ripple highlights (no numbers) */}
           <button
             onClick={() => setIsNotificationDrawerOpen(true)}
-            className="w-9 h-9 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 text-engawa-600 flex items-center justify-center relative transition-all active:scale-95 shadow-sm"
+            className={`w-9 h-9 rounded-full bg-white/50 hover:bg-white/80 border text-engawa-600 flex items-center justify-center relative transition-all active:scale-95 shadow-sm ${
+              unreadNotifCount > 0 
+                ? 'animate-pingRing border-engawa-500/50 shadow-md shadow-engawa-500/10' 
+                : 'border-white/60'
+            }`}
             title="通知一覧"
           >
             <BellIcon size={18} />
             {unreadNotifCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white font-extrabold text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center border border-white animate-pulse">
-                {unreadNotifCount}
-              </span>
+              <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border border-white animate-pulse" />
             )}
           </button>
         </div>
