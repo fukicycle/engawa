@@ -14,6 +14,8 @@ interface AuthContextType {
   joinFamily: (inviteCode: string) => Promise<void>;
   createFamily: (familyName: string) => Promise<void>;
   logout: () => Promise<void>;
+  fontSize: 'small' | 'normal' | 'large';
+  changeFontSize: (size: 'small' | 'normal' | 'large') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +32,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fontSize, setFontSizeState] = useState<'small' | 'normal' | 'large'>('normal');
+
+  // Load font size preference on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('engawa_font_size');
+    if (saved === 'small' || saved === 'normal' || saved === 'large') {
+      setFontSizeState(saved);
+    }
+  }, []);
+
+  const changeFontSize = (size: 'small' | 'normal' | 'large') => {
+    setFontSizeState(size);
+    localStorage.setItem('engawa_font_size', size);
+  };
 
   const fetchProfile = async (uid: string): Promise<UserProfile | null> => {
     try {
@@ -152,6 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     joinFamily,
     createFamily,
     logout,
+    fontSize,
+    changeFontSize,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

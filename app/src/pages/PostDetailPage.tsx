@@ -8,10 +8,22 @@ import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../compo
 import { Dialog } from '../components/Dialog';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
+const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
+  if (size === 'small') return 'text-[11px] leading-relaxed';
+  if (size === 'large') return 'text-base md:text-lg leading-loose font-bold tracking-wide';
+  return 'text-[13px] leading-relaxed'; // normal
+};
+
+const getTitleTextClass = (size: 'small' | 'normal' | 'large') => {
+  if (size === 'small') return 'text-[10px] font-bold';
+  if (size === 'large') return 'text-sm md:text-base font-extrabold tracking-wide';
+  return 'text-[11px] font-bold'; // normal
+};
+
 export const PostDetailPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, fontSize } = useAuth();
   
   const [post, setPost] = useState<Post | null>(null);
   const [linkedEvent, setLinkedEvent] = useState<CalendarEvent | null>(null);
@@ -524,7 +536,7 @@ export const PostDetailPage: React.FC = () => {
                 className="w-8 h-8 rounded-full border border-white/30 bg-white/50"
               />
               <div>
-                <h4 className="text-xs font-extrabold text-engawa-800">{postAuthor.name}</h4>
+                <h4 className={`font-extrabold text-engawa-800 ${getTitleTextClass(fontSize)}`}>{postAuthor.name}</h4>
                 <p className="text-[9px] text-wood-900/40 font-medium">
                   {new Date(post.createdAt).toLocaleString('ja-JP')}
                   {post.edited && (
@@ -605,7 +617,7 @@ export const PostDetailPage: React.FC = () => {
               </div>
             </form>
           ) : (
-            <p className="text-sm leading-relaxed text-wood-900/80 font-medium break-all whitespace-pre-line px-1">
+            <p className={`font-medium break-all whitespace-pre-line px-1 text-wood-900 ${getBodyTextClass(fontSize)}`}>
               {post.content}
             </p>
           )}
@@ -799,7 +811,7 @@ export const PostDetailPage: React.FC = () => {
 
         {/* MIDDLE SCROLLABLE SECTION (MESSAGES / REPLIES LIST) */}
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 min-h-0 bg-white/5 hide-scrollbar">
-          <h3 className="text-xs font-extrabold text-wood-900/50 tracking-wider">やり取り一覧 ({messages.length})</h3>
+          <h3 className={`font-extrabold text-wood-900/50 tracking-wider ${getTitleTextClass(fontSize)}`}>やり取り一覧 ({messages.length})</h3>
 
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 py-8 text-wood-900/30">
@@ -826,13 +838,13 @@ export const PostDetailPage: React.FC = () => {
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
                       <span className="text-[9px] font-extrabold text-wood-900/40 mb-0.5">{msgAuthor.name}</span>
-                      <div className={`p-3 rounded-2xl text-xs font-medium leading-relaxed break-all transition-all duration-500 ${
+                      <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all transition-all duration-500 ${
                         isHighlighted
                           ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'
                           : isMe 
                             ? 'bg-engawa-600 text-white rounded-tr-none shadow-sm shadow-engawa-600/10' 
                             : 'bg-white/50 border border-white/40 text-wood-900 rounded-tl-none'
-                      }`}>
+                      } ${getBodyTextClass(fontSize)}`}>
                         {msg.text}
                       </div>
                       <span className="text-[8px] text-wood-900/30 font-medium mt-1">

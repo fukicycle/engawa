@@ -30,9 +30,15 @@ const formatLastReplyTime = (timestamp: number) => {
   return `${days}日前`;
 };
 
+const getBodyTextClass = (size: 'small' | 'normal' | 'large') => {
+  if (size === 'small') return 'text-[11px] leading-relaxed';
+  if (size === 'large') return 'text-base md:text-lg leading-loose font-bold tracking-wide';
+  return 'text-[13px] leading-relaxed'; // normal
+};
+
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, fontSize, changeFontSize } = useAuth();
   const { permission: pushPermission, subscribeUser } = usePushNotifications();
   
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
@@ -414,7 +420,7 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <p className="text-sm leading-relaxed text-wood-900/80 font-medium break-all whitespace-pre-line">
+                    <p className={`font-medium break-all whitespace-pre-line text-wood-900 ${getBodyTextClass(fontSize)}`}>
                       {post.content}
                     </p>
 
@@ -655,6 +661,33 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
+            {/* Font Size Settings */}
+            <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-engawa-600 font-soft">Aa</span>
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">文字サイズの変更</h3>
+              </div>
+
+              <div className="flex bg-wood-900/5 p-1 rounded-2xl border border-white/20 mt-1">
+                {(['small', 'normal', 'large'] as const).map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => changeFontSize(size)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                      fontSize === size
+                        ? 'bg-white text-engawa-700 shadow-sm'
+                        : 'text-wood-900/50 hover:text-wood-900/70'
+                    }`}
+                  >
+                    {size === 'small' ? '小さめ' : size === 'normal' ? '普通' : '大きめ'}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-wood-900/40 leading-relaxed px-1 font-medium text-center">
+                スレッド本文やチャット、お知らせ履歴などの文字サイズが変更されます
+              </p>
+            </div>
+
             {/* Family Members List */}
             <div className="glass-card rounded-3xl p-5 border border-white/40 shadow-sm flex flex-col gap-3">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
@@ -805,7 +838,7 @@ export const HomePage: React.FC = () => {
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                           )}
                         </div>
-                        <p className="text-[11px] font-medium leading-relaxed truncate">{notif.body}</p>
+                        <p className={`font-medium leading-relaxed truncate text-wood-900 ${getBodyTextClass(fontSize)}`}>{notif.body}</p>
                         <span className="text-[8px] text-wood-900/30 font-bold mt-1">{notifDate}</span>
                       </div>
                     );
