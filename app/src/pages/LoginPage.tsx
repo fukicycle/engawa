@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signInWithPopup 
+  signInWithCredential,
+  GoogleAuthProvider
 } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase';
+import { auth } from '../firebase';
 import { LeafBackground } from '../components/LeafBackground';
 import { HomeIcon } from '../components/Icons';
+
+declare const google: any;
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,16 +48,63 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setError('');
+
+    if (typeof google === 'undefined') {
+      setError('Google認証ライブラリを読み込み中です。少々お待ちください。');
+      return;
+    }
+
     setLoading(true);
+
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate('/setup-family');
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId || clientId === 'your-google-client-id.apps.googleusercontent.com') {
+        throw new Error('Google Client ID is not configured.');
+      }
+
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'openid email profile',
+        callback: async (response: any) => {
+          if (response.error) {
+            console.error('Google token error:', response.error);
+            setError('Googleログインに失敗しました。');
+            setLoading(false);
+            return;
+          }
+
+          if (response.access_token) {
+            try {
+              const credential = GoogleAuthProvider.credential(null, response.access_token);
+              await signInWithCredential(auth, credential);
+              navigate('/setup-family');
+            } catch (authErr: any) {
+              console.error('Firebase sign-in error:', authErr);
+              setError('Firebaseのログイン認証に失敗しました。');
+            } finally {
+              setLoading(false);
+            }
+          } else {
+            setLoading(false);
+          }
+        },
+        error_callback: (err: any) => {
+          console.error('GSI client error:', err);
+          setError('Googleログイン中にエラーが発生しました。');
+          setLoading(false);
+        }
+      });
+
+      client.requestAccessToken();
     } catch (err: any) {
-      console.error(err);
-      setError('Googleログインに失敗しました。');
-    } finally {
+      console.error('Google Auth Init error:', err);
+      if (err.message && err.message.includes('Client ID')) {
+        setError('Googleログインが設定されていません（クライアントID未設定）。');
+      } else {
+        setError('Googleログインの開始に失敗しました。');
+      }
       setLoading(false);
     }
   };
