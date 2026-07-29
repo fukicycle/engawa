@@ -766,9 +766,9 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Event Agenda Card for Selected Date */}
-            <div className="glass-card rounded-2xl p-4 shadow-sm flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
-              <div className="flex items-center justify-between border-b border-wood-900/5 pb-2 shrink-0">
+            {/* Flat Event Agenda List */}
+            <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden px-1">
+              <div className="flex items-center justify-between pb-1 shrink-0">
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
                   これからの予定
                 </h3>
@@ -787,7 +787,7 @@ export const HomePage: React.FC = () => {
               {futureEvents.length === 0 ? (
                 <p className="text-xs text-wood-900/75 font-bold py-4 text-center">予定はありません。</p>
               ) : (
-                <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 hide-scrollbar">
+                <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 pb-4 hide-scrollbar">
                   {futureEvents.map((ev) => {
                     const attendeeIds = Object.keys(ev.attendees || {}).filter(uid => ev.attendees?.[uid] === true);
                     const isSelectedDate = ev.date === selectedDate;
@@ -804,10 +804,10 @@ export const HomePage: React.FC = () => {
                             setIsEventDetailOpen(true);
                           }
                         }}
-                        className={`p-3 rounded-2xl border text-left cursor-pointer transition-all active:scale-[0.99] ${
+                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all active:scale-[0.99] shadow-sm ${
                           isSelectedDate
-                            ? 'bg-engawa-600/10 border-engawa-500/40 ring-1 ring-engawa-500/20'
-                            : 'bg-white/30 border-white/45 hover:bg-white/55'
+                            ? 'bg-engawa-600/15 border-engawa-500/50 ring-1 ring-engawa-500/30'
+                            : 'bg-white/50 border-white/50 hover:bg-white/70'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1286,12 +1286,12 @@ export const HomePage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop with Blur */}
           <div 
-            className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" 
+            className="absolute inset-0 bg-wood-900/25 backdrop-blur-md animate-gentleFadeIn" 
             onClick={() => setIsEventDetailOpen(false)} 
           />
           
           {/* Detailed Dialog Box */}
-          <div className="relative z-10 w-full max-w-[310px] glass-card rounded-2xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
+          <div className="relative z-10 w-full max-w-[310px] bg-white/85 backdrop-blur-lg border border-white/60 shadow-2xl rounded-3xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
               <h3 className="text-sm font-extrabold text-engawa-800 tracking-wider font-soft">予定の詳細</h3>
@@ -1314,7 +1314,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {selectedDetailEvent.description && (
-                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/20 p-3 rounded-xl border border-white/30 whitespace-pre-line">
+                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line">
                   {decryptText(selectedDetailEvent.description)}
                 </p>
               )}
@@ -1322,7 +1322,7 @@ export const HomePage: React.FC = () => {
               {/* Attendees list */}
               <div className="flex flex-col gap-1.5 mt-1">
                 <label className="text-[10px] font-bold text-engawa-800 tracking-wider">参加メンバー</label>
-                <div className="flex flex-col gap-2 bg-white/10 p-2.5 rounded-xl border border-white/20">
+                <div className="flex flex-col gap-2 bg-white/30 p-2.5 rounded-xl border border-white/35">
                   {(() => {
                     const attendeesMap = selectedDetailEvent.attendees || {};
                     const attendeeUids = Object.keys(attendeesMap).filter(uid => attendeesMap[uid] === true);
