@@ -4,7 +4,7 @@ import path from 'path';
 
 try {
   // Get all tags sorted by creation/version
-  let currentTag = 'v0.7.6'; // Default fallback
+  let currentTag = 'v0.8.0'; // Default fallback
   let previousTag = '';
   let logRange = 'HEAD';
 
@@ -83,6 +83,6 @@ try {
   }
   fs.writeFileSync(
     path.resolve(outputDir, 'release-notes.json'),
-    JSON.stringify({ version: 'v0.7.6', features: [], fixes: [] }, null, 2)
+    JSON.stringify({ version: 'v0.8.0', features: [], fixes: [] }, null, 2)
   );
 }
