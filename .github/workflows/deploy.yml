@@ -2,8 +2,8 @@ name: 縁側 (Engawa) 自動配備
 
 on:
   push:
-    branches:
-      - main # main ブランチにプッシュされた時に起動
+    tags:
+      - 'v*' # vから始まるタグ（バージョンアップ）がプッシュされた時に起動
   workflow_dispatch: # 手動実行も可能
 
 # GitHub Pages への安全な直接配備に必要なアクセス権限の設定
@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: リポジトリの取得
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Node.js のセットアップ
         uses: actions/setup-node@v4

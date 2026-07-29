@@ -8,6 +8,8 @@ import { Navigation } from '../components/Navigation';
 import { CreateModal } from '../components/CreateModal';
 import { Dialog } from '../components/Dialog';
 import { LoadingScreen } from '../components/LoadingScreen';
+import { ReleaseNoteModal } from '../components/ReleaseNoteModal';
+import releaseNotes from '../assets/release-notes.json';
 import { 
   HomeIcon, 
   LogOutIcon, 
@@ -41,6 +43,127 @@ export const HomePage: React.FC = () => {
   const { currentUser, userProfile, logout, fontSize, changeFontSize, switchFamily } = useAuth();
   const { permission: pushPermission, subscribeUser } = usePushNotifications();
   
+  // PWA update states
+  const [autoUpdate, setAutoUpdate] = useState<boolean>(() => {
+    return localStorage.getItem('engawa_auto_update') !== 'false'; // default true
+  });
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [isReleaseNoteOpen, setIsReleaseNoteOpen] = useState(false);
+  const [updateRegistration, setUpdateRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+
+  // Check if version was upgraded to show release notes
+  useEffect(() => {
+    const lastViewedVersion = localStorage.getItem('engawa_viewed_version');
+    if (lastViewedVersion !== releaseNotes.version) {
+      setIsReleaseNoteOpen(true);
+    }
+  }, []);
+
+  const handleCloseReleaseNote = () => {
+    setIsReleaseNoteOpen(false);
+    localStorage.setItem('engawa_viewed_version', releaseNotes.version);
+  };
+
+  // PWA update and lifecycle listener
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    // Helper to monitor the new worker state
+    const monitorStateAndTrigger = (registration: ServiceWorkerRegistration) => {
+      const waitingWorker = registration.waiting;
+      if (!waitingWorker) return;
+
+      if (autoUpdate) {
+        setIsApplyingUpdate(true);
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        setUpdateRegistration(registration);
+      }
+    };
+
+    navigator.serviceWorker.ready.then((registration) => {
+      // Listen for incoming installations
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+        if (installingWorker) {
+          installingWorker.addEventListener('statechange', () => {
+            if (installingWorker.state === 'installed') {
+              monitorStateAndTrigger(registration);
+            }
+          });
+        }
+      });
+
+      // Check if there is already a waiting service worker
+      if (registration.waiting) {
+        monitorStateAndTrigger(registration);
+      }
+    });
+
+    // Handle instant page reload once skipWaiting executes
+    let refreshing = false;
+    const handleControllerChange = () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, [autoUpdate]);
+
+  const handleCheckUpdateManually = async () => {
+    if (!('serviceWorker' in navigator)) {
+      setDialogTitle('アップデートの確認');
+      setDialogMessage('お使いの環境はPWAアップデートに対応していません。');
+      setDialogOpen(true);
+      return;
+    }
+
+    setIsCheckingUpdate(true);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.update();
+
+      // Wait a brief moment for update found to trigger or detect waiting
+      setTimeout(() => {
+        setIsCheckingUpdate(false);
+        if (registration.waiting) {
+          setUpdateRegistration(registration);
+          setDialogTitle('アップデートの確認');
+          setDialogMessage('新しい更新が見つかりました。手動でアップデートを実行します。');
+          setDialogOpen(true);
+        } else {
+          setDialogTitle('アップデートの確認');
+          setDialogMessage('現在、縁側は最新の状態（' + releaseNotes.version + '）です。');
+          setDialogOpen(true);
+        }
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setIsCheckingUpdate(false);
+      setDialogTitle('エラー');
+      setDialogMessage('アップデートの確認に失敗しました。時間をおいて再度お試しください。');
+      setDialogOpen(true);
+    }
+  };
+
+  const handleApplyManualUpdate = () => {
+    if (updateRegistration && updateRegistration.waiting) {
+      setIsApplyingUpdate(true);
+      updateRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
+  const handleToggleAutoUpdate = (checked: boolean) => {
+    setAutoUpdate(checked);
+    localStorage.setItem('engawa_auto_update', String(checked));
+  };
+
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');
@@ -334,6 +457,10 @@ export const HomePage: React.FC = () => {
     return days;
   };
 
+  if (isApplyingUpdate) {
+    return <LoadingScreen message="新機能をお庭に届けています..." />;
+  }
+
   if (!family) {
     return <LoadingScreen message="庭をひらいています..." />;
   }
@@ -356,7 +483,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v0.7.5</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">{releaseNotes.version}</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -828,6 +955,70 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
 
+            {/* App Update (PWA) Settings */}
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <div className="text-engawa-600">
+                  <LeafIcon size={18} />
+                </div>
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">アプリの更新 (PWA)</h3>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {/* Auto Update Toggle */}
+                <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-wood-900/80">自動アップデート</span>
+                    <span className="text-[10px] text-wood-900/75 font-medium">
+                      新バージョン検出時に強制的に更新します
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleToggleAutoUpdate(!autoUpdate)}
+                    className={`w-11 h-6 rounded-full transition-all duration-300 relative border flex items-center p-0.5 ${
+                      autoUpdate
+                        ? 'bg-engawa-600 border-engawa-500/20 justify-end'
+                        : 'bg-wood-900/10 border-wood-900/10 justify-start'
+                    }`}
+                  >
+                    <span className="w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300" />
+                  </button>
+                </div>
+
+                {/* Manual Update Check */}
+                <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-wood-900/80">手動で更新を検証</span>
+                    <span className="text-[10px] text-wood-900/75 font-medium">
+                      最新の更新情報をお庭に探しにいきます
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleCheckUpdateManually}
+                    disabled={isCheckingUpdate}
+                    className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 disabled:bg-engawa-600/50 px-3.5 py-2 rounded-xl shadow shadow-engawa-600/10 transition-all active:scale-95"
+                  >
+                    {isCheckingUpdate ? '確認中...' : '更新を確認'}
+                  </button>
+                </div>
+
+                {/* Apply Manual Update Button (if waiting worker is found) */}
+                {updateRegistration?.waiting && (
+                  <div className="flex flex-col gap-2 p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl mt-1 text-center animate-pulse">
+                    <span className="text-[10px] text-amber-800 font-extrabold">
+                      新しいアップデートが利用可能です！
+                    </span>
+                    <button
+                      onClick={handleApplyManualUpdate}
+                      className="text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 py-2 rounded-xl transition-all"
+                    >
+                      今すぐアップデートを適用
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Family Members List */}
             <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
               <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
@@ -1209,6 +1400,12 @@ export const HomePage: React.FC = () => {
         title={dialogTitle}
         message={dialogMessage}
         onClose={() => setDialogOpen(false)}
+      />
+
+      {/* Dynamic Release Note Dialog Pop-up */}
+      <ReleaseNoteModal
+        isOpen={isReleaseNoteOpen}
+        onClose={handleCloseReleaseNote}
       />
     </div>
   );
