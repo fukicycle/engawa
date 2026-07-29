@@ -223,12 +223,6 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (selectedDetailEvent) {
-      setEditEventDate(selectedDetailEvent.date);
-    }
-  }, [selectedDetailEvent]);
-
   const handleToggleAutoUpdate = (checked: boolean) => {
     setAutoUpdate(checked);
     localStorage.setItem('engawa_auto_update', String(checked));
@@ -268,6 +262,12 @@ export const HomePage: React.FC = () => {
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
 
   const unreadNotifCount = Object.values(notifications).filter(n => !n.read).length;
+
+  useEffect(() => {
+    if (selectedDetailEvent) {
+      setEditEventDate(selectedDetailEvent.date);
+    }
+  }, [selectedDetailEvent]);
 
   useEffect(() => {
     if (!currentUser) {
