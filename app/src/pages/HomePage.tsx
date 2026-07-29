@@ -199,6 +199,36 @@ export const HomePage: React.FC = () => {
     }
   };
 
+  const handleUpdateEventDate = async () => {
+    if (!selectedDetailEvent || !editEventDate || !userProfile?.activeFamilyId) return;
+
+    try {
+      const familyId = userProfile.activeFamilyId;
+      const eventRef = ref(database, `calendarEvents/${familyId}/${selectedDetailEvent.id}`);
+      
+      await set(eventRef, {
+        ...selectedDetailEvent,
+        date: editEventDate
+      });
+
+      setIsEventDetailOpen(false);
+      setDialogTitle('日付の変更');
+      setDialogMessage('予定の日付を変更しました！');
+      setDialogOpen(true);
+    } catch (err) {
+      console.error(err);
+      setDialogTitle('エラー');
+      setDialogMessage('日付の変更に失敗しました。');
+      setDialogOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDetailEvent) {
+      setEditEventDate(selectedDetailEvent.date);
+    }
+  }, [selectedDetailEvent]);
+
   const handleToggleAutoUpdate = (checked: boolean) => {
     setAutoUpdate(checked);
     localStorage.setItem('engawa_auto_update', String(checked));
@@ -230,6 +260,7 @@ export const HomePage: React.FC = () => {
   // Event Detail Dialog States
   const [selectedDetailEvent, setSelectedDetailEvent] = useState<CalendarEvent | null>(null);
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
+  const [editEventDate, setEditEventDate] = useState('');
 
   // Unread posts and in-app Notification States
   const [readPosts, setReadPosts] = useState<Record<string, number>>({});
@@ -596,7 +627,7 @@ export const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
+    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-0 max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
@@ -1506,6 +1537,27 @@ export const HomePage: React.FC = () => {
                   })()}
                 </div>
               </div>
+
+              {/* Edit Date Section (visible to creator of the event) */}
+              {currentUser && currentUser.uid === selectedDetailEvent.authorId && (
+                <div className="flex flex-col gap-1.5 border-t border-wood-900/5 pt-3">
+                  <label className="text-[10px] font-bold text-engawa-800 tracking-wider">日付を変更する</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="date"
+                      value={editEventDate}
+                      onChange={(e) => setEditEventDate(e.target.value)}
+                      className="flex-1 glass-input rounded-xl px-2.5 py-1.5 text-xs text-wood-900 shadow-sm border border-wood-900/10 h-8"
+                    />
+                    <button
+                      onClick={handleUpdateEventDate}
+                      className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all h-8 flex items-center justify-center"
+                    >
+                      変更
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Attendance Toggle Button */}
