@@ -164,6 +164,40 @@ export const HomePage: React.FC = () => {
     localStorage.setItem('engawa_auto_update', String(checked));
   };
 
+  // Listen for unlinked eventId in query parameters for direct detail modal opening
+  useEffect(() => {
+    if (!currentUser || !userProfile?.activeFamilyId) return;
+
+    const parseAndOpenEvent = async () => {
+      const hash = window.location.hash;
+      const queryIdx = hash.indexOf('?');
+      if (queryIdx !== -1) {
+        const params = new URLSearchParams(hash.substring(queryIdx));
+        const eventId = params.get('eventId');
+        if (eventId) {
+          try {
+            const familyId = userProfile.activeFamilyId;
+            const eventSnapshot = await get(ref(database, `calendarEvents/${familyId}/${eventId}`));
+            if (eventSnapshot.exists()) {
+              const eventData = eventSnapshot.val() as CalendarEvent;
+              setSelectedDetailEvent(eventData);
+              setIsEventDetailOpen(true);
+              setActiveTab('calendar'); // Switch to calendar tab so they see it in context!
+              
+              // Clear the eventId query parameter from hash so it doesn't reopen on every mount/hash change
+              const cleanHash = hash.substring(0, queryIdx);
+              navigate(cleanHash, { replace: true });
+            }
+          } catch (err) {
+            console.error("Failed to parse and open unlinked event:", err);
+          }
+        }
+      }
+    };
+
+    parseAndOpenEvent();
+  }, [currentUser, userProfile?.activeFamilyId, window.location.hash]);
+
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');

@@ -270,7 +270,7 @@ export const CreateModal: React.FC<CreateModalProps> = ({
         };
 
         await set(newEventRef, eventData);
-        await createNotification('new_event', `予定追加: ${eventTitle.trim()}`, `${eventDate} の予定です。`, linkedPostId ? `/post/${linkedPostId}` : `/`);
+        await createNotification('new_event', `予定追加: ${eventTitle.trim()}`, `${eventDate} の予定です。`, linkedPostId ? `/post/${linkedPostId}` : `/?eventId=${eventId}`);
       }
 
       // Reset Form State
