@@ -51,6 +51,7 @@ export const HomePage: React.FC = () => {
   const [isReleaseNoteOpen, setIsReleaseNoteOpen] = useState(false);
   const [updateRegistration, setUpdateRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('庭をひらいています...');
 
   // Check if version was upgraded to show release notes
   useEffect(() => {
@@ -69,6 +70,8 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
+    let progressInterval: any;
+
     // Helper to monitor the new worker state
     const monitorStateAndTrigger = (registration: ServiceWorkerRegistration) => {
       const waitingWorker = registration.waiting;
@@ -76,6 +79,22 @@ export const HomePage: React.FC = () => {
 
       if (autoUpdate) {
         setIsApplyingUpdate(true);
+        setLoadingMessage('新しいアップデートを自動適用中...');
+
+        let step = 1;
+        progressInterval = setInterval(() => {
+          if (step === 1) {
+            setLoadingMessage('古いお便りを整理しています (30%)...');
+          } else if (step === 2) {
+            setLoadingMessage('新しいお庭をひらいています (70%)...');
+          } else {
+            clearInterval(progressInterval);
+            setLoadingMessage('再起動中...');
+            window.location.reload();
+          }
+          step++;
+        }, 1000);
+
         waitingWorker.postMessage({ type: 'SKIP_WAITING' });
       } else {
         setUpdateRegistration(registration);
@@ -106,12 +125,15 @@ export const HomePage: React.FC = () => {
     const handleControllerChange = () => {
       if (refreshing) return;
       refreshing = true;
+      if (progressInterval) clearInterval(progressInterval);
+      setLoadingMessage('再起動中...');
       window.location.reload();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
     return () => {
+      if (progressInterval) clearInterval(progressInterval);
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
     };
   }, [autoUpdate]);
@@ -155,6 +177,24 @@ export const HomePage: React.FC = () => {
   const handleApplyManualUpdate = () => {
     if (updateRegistration && updateRegistration.waiting) {
       setIsApplyingUpdate(true);
+      setLoadingMessage('最新のファイルを適用中...');
+
+      let step = 1;
+      const progressInterval = setInterval(() => {
+        if (step === 1) {
+          setLoadingMessage('古いファイルを整理しています (25%)...');
+        } else if (step === 2) {
+          setLoadingMessage('新しいお庭を整えています (60%)...');
+        } else if (step === 3) {
+          setLoadingMessage('仕上げを行っています (90%)...');
+        } else {
+          clearInterval(progressInterval);
+          setLoadingMessage('まもなく再起動します...');
+          window.location.reload();
+        }
+        step++;
+      }, 800);
+
       updateRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
   };
@@ -163,40 +203,6 @@ export const HomePage: React.FC = () => {
     setAutoUpdate(checked);
     localStorage.setItem('engawa_auto_update', String(checked));
   };
-
-  // Listen for unlinked eventId in query parameters for direct detail modal opening
-  useEffect(() => {
-    if (!currentUser || !userProfile?.activeFamilyId) return;
-
-    const parseAndOpenEvent = async () => {
-      const hash = window.location.hash;
-      const queryIdx = hash.indexOf('?');
-      if (queryIdx !== -1) {
-        const params = new URLSearchParams(hash.substring(queryIdx));
-        const eventId = params.get('eventId');
-        if (eventId) {
-          try {
-            const familyId = userProfile.activeFamilyId;
-            const eventSnapshot = await get(ref(database, `calendarEvents/${familyId}/${eventId}`));
-            if (eventSnapshot.exists()) {
-              const eventData = eventSnapshot.val() as CalendarEvent;
-              setSelectedDetailEvent(eventData);
-              setIsEventDetailOpen(true);
-              setActiveTab('calendar'); // Switch to calendar tab so they see it in context!
-              
-              // Clear the eventId query parameter from hash so it doesn't reopen on every mount/hash change
-              const cleanHash = hash.substring(0, queryIdx);
-              navigate(cleanHash, { replace: true });
-            }
-          } catch (err) {
-            console.error("Failed to parse and open unlinked event:", err);
-          }
-        }
-      }
-    };
-
-    parseAndOpenEvent();
-  }, [currentUser, userProfile?.activeFamilyId, window.location.hash]);
 
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -242,6 +248,40 @@ export const HomePage: React.FC = () => {
       return;
     }
   }, [currentUser, userProfile]);
+
+  // Listen for unlinked eventId in query parameters for direct detail modal opening
+  useEffect(() => {
+    if (!currentUser || !userProfile?.activeFamilyId) return;
+
+    const parseAndOpenEvent = async () => {
+      const hash = window.location.hash;
+      const queryIdx = hash.indexOf('?');
+      if (queryIdx !== -1) {
+        const params = new URLSearchParams(hash.substring(queryIdx));
+        const eventId = params.get('eventId');
+        if (eventId) {
+          try {
+            const familyId = userProfile.activeFamilyId;
+            const eventSnapshot = await get(ref(database, `calendarEvents/${familyId}/${eventId}`));
+            if (eventSnapshot.exists()) {
+              const eventData = eventSnapshot.val() as CalendarEvent;
+              setSelectedDetailEvent(eventData);
+              setIsEventDetailOpen(true);
+              setActiveTab('calendar'); // Switch to calendar tab so they see it in context!
+              
+              // Clear the eventId query parameter from hash so it doesn't reopen on every mount/hash change
+              const cleanHash = hash.substring(0, queryIdx);
+              navigate(cleanHash, { replace: true });
+            }
+          } catch (err) {
+            console.error("Failed to parse and open unlinked event:", err);
+          }
+        }
+      }
+    };
+
+    parseAndOpenEvent();
+  }, [currentUser, userProfile?.activeFamilyId, window.location.hash, navigate]);
 
   useEffect(() => {
     if (!userProfile?.activeFamilyId || !currentUser) return;
@@ -548,7 +588,7 @@ export const HomePage: React.FC = () => {
   };
 
   if (isApplyingUpdate) {
-    return <LoadingScreen message="新機能をお庭に届けています..." />;
+    return <LoadingScreen message={loadingMessage} />;
   }
 
   if (!family) {
