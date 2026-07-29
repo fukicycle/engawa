@@ -514,7 +514,7 @@ export const HomePage: React.FC = () => {
     const days = [];
     // Blank spots for days of previous month
     for (let i = 0; i < firstDayIndex; i++) {
-      days.push(<div key={`blank-${i}`} className="h-10 w-10"></div>);
+      days.push(<div key={`blank-${i}`} className="h-8 w-8"></div>);
     }
 
     // Days of current month
@@ -528,7 +528,7 @@ export const HomePage: React.FC = () => {
         <button
           key={day}
           onClick={() => handleDateSelect(dateString)}
-          className={`h-9 w-9 rounded-full flex flex-col items-center justify-center relative text-xs font-bold transition-all ${
+          className={`h-8 w-8 rounded-full flex flex-col items-center justify-center relative text-xs font-bold transition-all ${
             isSelected 
               ? 'bg-engawa-600 text-white shadow shadow-engawa-600/30 scale-105' 
               : isToday
@@ -810,11 +810,11 @@ export const HomePage: React.FC = () => {
 
         {/* SUBVIEW B: CALENDAR */}
         {activeTab === 'calendar' && (
-          <div className="flex-1 flex flex-col gap-4 animate-gentleSlideUp min-h-0 overflow-hidden pb-16">
+          <div className="flex-1 flex flex-col gap-3.5 animate-gentleSlideUp min-h-0 overflow-hidden">
             
             {/* Elegant Calendar Card with Smooth Pre-rendered Horizontal Swipe Carousel */}
             <div 
-              className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4 select-none touch-pan-y shrink-0 overflow-hidden"
+              className="glass-card rounded-2xl p-3 shadow-sm flex flex-col gap-2.5 select-none touch-pan-y shrink-0 overflow-hidden"
             >
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
@@ -838,7 +838,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Day of Week Headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-wood-900/75">
+              <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold text-wood-900/75">
                 <span className="text-red-400">日</span>
                 <span>月</span>
                 <span>火</span>
@@ -865,17 +865,17 @@ export const HomePage: React.FC = () => {
                   }}
                 >
                   {/* Prev Month Grid */}
-                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
                     {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
                   </div>
 
                   {/* Current Month Grid */}
-                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
                     {renderCalendarGridForDate(currentDate)}
                   </div>
 
                   {/* Next Month Grid */}
-                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
                     {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
                   </div>
                 </div>
