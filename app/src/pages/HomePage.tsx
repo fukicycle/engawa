@@ -422,33 +422,89 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  // Touch Swiping logic for Calendar
+  // Advanced Pre-rendered Multi-Month Carousel Touch Swiping Logic
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionIndex, setTransitionIndex] = useState(0); // -1: prev, 0: current, 1: next
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
+  const goToPrevMonth = () => {
+    if (isTransitioning) return;
+    setTransitionIndex(-1);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+      setTransitionIndex(0);
+      setIsTransitioning(false);
+    }, 300);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-
-    if (diff > 50) {
-      // Swipe left -> Next Month
+  const goToNextMonth = () => {
+    if (isTransitioning) return;
+    setTransitionIndex(1);
+    setIsTransitioning(true);
+    setTimeout(() => {
       setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-    } else if (diff < -50) {
-      // Swipe right -> Previous Month
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+      setTransitionIndex(0);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isTransitioning) return;
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping || touchStart === null) return;
+    const currentX = e.targetTouches[0].clientX;
+    const diff = currentX - touchStart;
+    // Compress movement slightly for fluid visual damping
+    setSwipeOffset(diff);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping || touchStart === null) return;
+    setIsSwiping(false);
+
+    const threshold = 60; // swipe threshold in pixels
+    if (swipeOffset > threshold) {
+      // Swipe right -> Prev Month
+      setTransitionIndex(-1);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+        setTransitionIndex(0);
+        setIsTransitioning(false);
+      }, 300);
+    } else if (swipeOffset < -threshold) {
+      // Swipe left -> Next Month
+      setTransitionIndex(1);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+        setTransitionIndex(0);
+        setIsTransitioning(false);
+      }, 300);
+    } else {
+      // Bounce back to middle
+      setTransitionIndex(0);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
     }
+    setSwipeOffset(0);
     setTouchStart(null);
   };
 
-  // Calendar Grid Generator
-  const renderCalendarGrid = () => {
+  // Calendar Grid Generator for Specific Base Date
+  const renderCalendarGridForDate = (baseDate: Date) => {
     const today = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth(); // Active Month (0-11)
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth(); // Active Month (0-11)
     
     // Days in current month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -756,16 +812,14 @@ export const HomePage: React.FC = () => {
         {activeTab === 'calendar' && (
           <div className="flex-1 flex flex-col gap-4 animate-gentleSlideUp min-h-0 overflow-hidden pb-16">
             
-            {/* Elegant Calendar Card */}
+            {/* Elegant Calendar Card with Smooth Pre-rendered Horizontal Swipe Carousel */}
             <div 
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4 select-none touch-pan-y shrink-0"
+              className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4 select-none touch-pan-y shrink-0 overflow-hidden"
             >
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                    onClick={goToPrevMonth}
                     className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
                   >
                     ←
@@ -774,7 +828,7 @@ export const HomePage: React.FC = () => {
                     {currentDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
                   </h3>
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                    onClick={goToNextMonth}
                     className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
                   >
                     →
@@ -794,9 +848,37 @@ export const HomePage: React.FC = () => {
                 <span className="text-blue-400">土</span>
               </div>
 
-              {/* Days Grid */}
-              <div className="grid grid-cols-7 gap-1.5 justify-items-center">
-                {renderCalendarGrid()}
+              {/* Sliding Carousel Wrapper */}
+              <div 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="w-full overflow-hidden touch-pan-y"
+              >
+                <div 
+                  className="flex flex-row w-[300%]"
+                  style={{
+                    transform: isSwiping
+                      ? `translateX(calc(-33.3333% + ${swipeOffset}px))`
+                      : `translateX(${-33.3333 - (transitionIndex * 33.3333)}%)`,
+                    transition: isSwiping || !isTransitioning ? 'none' : 'transform 300ms ease-out'
+                  }}
+                >
+                  {/* Prev Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                  </div>
+
+                  {/* Current Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(currentDate)}
+                  </div>
+
+                  {/* Next Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1.5 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                  </div>
+                </div>
               </div>
             </div>
 
