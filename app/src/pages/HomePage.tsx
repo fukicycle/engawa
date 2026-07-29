@@ -7,6 +7,7 @@ import { LeafBackground } from '../components/LeafBackground';
 import { Navigation } from '../components/Navigation';
 import { CreateModal } from '../components/CreateModal';
 import { Dialog } from '../components/Dialog';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { 
   HomeIcon, 
   LogOutIcon, 
@@ -242,8 +243,49 @@ export const HomePage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  // Calendar Helper: Get events of selected date
-  const selectedDateEvents = events.filter((ev) => ev.date === selectedDate);
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Filter events that are today or in the future
+  const futureEvents = events
+    .filter((ev) => ev.date >= todayStr)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.startTime || '').localeCompare(b.startTime || '');
+    });
+
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
+    // Find the first event on or after selected date
+    const targetEvent = futureEvents.find((ev) => ev.date >= dateString);
+    if (targetEvent) {
+      const el = document.getElementById(`event-card-${targetEvent.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  };
+
+  // Touch Swiping logic for Calendar
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+
+    if (diff > 50) {
+      // Swipe left -> Next Month
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    } else if (diff < -50) {
+      // Swipe right -> Previous Month
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    }
+    setTouchStart(null);
+  };
 
   // Calendar Grid Generator
   const renderCalendarGrid = () => {
@@ -272,7 +314,7 @@ export const HomePage: React.FC = () => {
       days.push(
         <button
           key={day}
-          onClick={() => setSelectedDate(dateString)}
+          onClick={() => handleDateSelect(dateString)}
           className={`h-9 w-9 rounded-full flex flex-col items-center justify-center relative text-xs font-bold transition-all ${
             isSelected 
               ? 'bg-engawa-600 text-white shadow shadow-engawa-600/30 scale-105' 
@@ -292,6 +334,10 @@ export const HomePage: React.FC = () => {
     return days;
   };
 
+  if (!family) {
+    return <LoadingScreen message="庭をひらいています..." />;
+  }
+
   return (
     <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
@@ -310,7 +356,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.38</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v0.7.5</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -547,10 +593,14 @@ export const HomePage: React.FC = () => {
 
         {/* SUBVIEW B: CALENDAR */}
         {activeTab === 'calendar' && (
-          <div className="flex flex-col gap-4 animate-gentleSlideUp">
+          <div className="flex-1 flex flex-col gap-4 animate-gentleSlideUp min-h-0 overflow-hidden pb-16">
             
             {/* Elegant Calendar Card */}
-            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4">
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4 select-none touch-pan-y shrink-0"
+            >
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
                   <button
@@ -590,10 +640,10 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Event Agenda Card for Selected Date */}
-            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-wood-900/5 pb-2 shrink-0">
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
-                  {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
+                  これからの予定
                 </h3>
                 <button
                   onClick={() => {
@@ -607,16 +657,18 @@ export const HomePage: React.FC = () => {
                 </button>
               </div>
 
-              {selectedDateEvents.length === 0 ? (
-                <p className="text-xs text-wood-900/75 font-bold py-4 text-center">この日の予定はありません。</p>
+              {futureEvents.length === 0 ? (
+                <p className="text-xs text-wood-900/75 font-bold py-4 text-center">予定はありません。</p>
               ) : (
-                <div className="flex flex-col gap-3">
-                  {selectedDateEvents.map((ev) => {
+                <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 hide-scrollbar">
+                  {futureEvents.map((ev) => {
                     const attendeeIds = Object.keys(ev.attendees || {}).filter(uid => ev.attendees?.[uid] === true);
-                    
+                    const isSelectedDate = ev.date === selectedDate;
+
                     return (
                       <div
                         key={ev.id}
+                        id={`event-card-${ev.id}`}
                         onClick={() => {
                           if (ev.linkedPostId) {
                             navigate(`/post/${ev.linkedPostId}`);
@@ -625,15 +677,24 @@ export const HomePage: React.FC = () => {
                             setIsEventDetailOpen(true);
                           }
                         }}
-                        className="p-3 rounded-2xl border border-white/45 bg-white/30 text-left cursor-pointer hover:bg-white/55 transition-all active:scale-[0.99]"
+                        className={`p-3 rounded-2xl border text-left cursor-pointer transition-all active:scale-[0.99] ${
+                          isSelectedDate
+                            ? 'bg-engawa-600/10 border-engawa-500/40 ring-1 ring-engawa-500/20'
+                            : 'bg-white/30 border-white/45 hover:bg-white/55'
+                        }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-extrabold text-engawa-800">{decryptText(ev.title)}</h4>
+                          <span className="text-[10px] font-bold text-wood-900/55 bg-white/50 px-2 py-0.5 rounded-md border border-white/30">
+                            {ev.date.replace('-', '年').replace('-', '月') + '日'}
+                          </span>
                           {ev.startTime && (
                             <span className="text-[9px] font-bold bg-white/60 border border-white/50 text-engawa-600 px-2 py-0.5 rounded-md">
                               {ev.startTime} {ev.endTime ? `~ ${ev.endTime}` : ''}
                             </span>
                           )}
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <h4 className="text-xs font-extrabold text-engawa-800">{decryptText(ev.title)}</h4>
                         </div>
                         {ev.description && (
                           <p className="text-[11px] text-wood-900/90 mt-1 line-clamp-2">{decryptText(ev.description)}</p>
@@ -1054,7 +1115,7 @@ export const HomePage: React.FC = () => {
             {/* Event Info */}
             <div className="flex flex-col gap-2.5">
               <div>
-                <h4 className="text-base font-extrabold text-engawa-800">{selectedDetailEvent.title}</h4>
+                <h4 className="text-base font-extrabold text-engawa-800">{decryptText(selectedDetailEvent.title)}</h4>
                 <p className="text-xs text-wood-900/80 font-bold mt-1">
                   📅 {selectedDetailEvent.date}
                   {selectedDetailEvent.startTime ? ` | ⏰ ${selectedDetailEvent.startTime}${selectedDetailEvent.endTime ? ` ~ ${selectedDetailEvent.endTime}` : ''}` : ' | ⏰ 終日'}
@@ -1063,7 +1124,7 @@ export const HomePage: React.FC = () => {
 
               {selectedDetailEvent.description && (
                 <p className="text-xs text-wood-900/95 leading-relaxed bg-white/20 p-3 rounded-xl border border-white/30 whitespace-pre-line">
-                  {selectedDetailEvent.description}
+                  {decryptText(selectedDetailEvent.description)}
                 </p>
               )}
 
