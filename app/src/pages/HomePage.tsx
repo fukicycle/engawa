@@ -7,6 +7,9 @@ import { LeafBackground } from '../components/LeafBackground';
 import { Navigation } from '../components/Navigation';
 import { CreateModal } from '../components/CreateModal';
 import { Dialog } from '../components/Dialog';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { ReleaseNoteModal } from '../components/ReleaseNoteModal';
+import releaseNotes from '../assets/release-notes.json';
 import { 
   HomeIcon, 
   LogOutIcon, 
@@ -40,6 +43,191 @@ export const HomePage: React.FC = () => {
   const { currentUser, userProfile, logout, fontSize, changeFontSize, switchFamily } = useAuth();
   const { permission: pushPermission, subscribeUser } = usePushNotifications();
   
+  // PWA update states
+  const [autoUpdate, setAutoUpdate] = useState<boolean>(() => {
+    return localStorage.getItem('engawa_auto_update') !== 'false'; // default true
+  });
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [isReleaseNoteOpen, setIsReleaseNoteOpen] = useState(false);
+  const [updateRegistration, setUpdateRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('庭をひらいています...');
+
+  // Check if version was upgraded to show release notes
+  useEffect(() => {
+    const lastViewedVersion = localStorage.getItem('engawa_viewed_version');
+    if (lastViewedVersion !== releaseNotes.version) {
+      setIsReleaseNoteOpen(true);
+    }
+  }, []);
+
+  const handleCloseReleaseNote = () => {
+    setIsReleaseNoteOpen(false);
+    localStorage.setItem('engawa_viewed_version', releaseNotes.version);
+  };
+
+  // PWA update and lifecycle listener
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    let progressInterval: any;
+
+    // Helper to monitor the new worker state
+    const monitorStateAndTrigger = (registration: ServiceWorkerRegistration) => {
+      const waitingWorker = registration.waiting;
+      if (!waitingWorker) return;
+
+      if (autoUpdate) {
+        setIsApplyingUpdate(true);
+        setLoadingMessage('新しいアップデートを自動適用中...');
+
+        let step = 1;
+        progressInterval = setInterval(() => {
+          if (step === 1) {
+            setLoadingMessage('古いお便りを整理しています (30%)...');
+          } else if (step === 2) {
+            setLoadingMessage('新しいお庭をひらいています (70%)...');
+          } else {
+            clearInterval(progressInterval);
+            setLoadingMessage('再起動中...');
+            window.location.reload();
+          }
+          step++;
+        }, 1000);
+
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        setUpdateRegistration(registration);
+      }
+    };
+
+    navigator.serviceWorker.ready.then((registration) => {
+      // Listen for incoming installations
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+        if (installingWorker) {
+          installingWorker.addEventListener('statechange', () => {
+            if (installingWorker.state === 'installed') {
+              monitorStateAndTrigger(registration);
+            }
+          });
+        }
+      });
+
+      // Check if there is already a waiting service worker
+      if (registration.waiting) {
+        monitorStateAndTrigger(registration);
+      }
+    });
+
+    // Handle instant page reload once skipWaiting executes
+    let refreshing = false;
+    const handleControllerChange = () => {
+      if (refreshing) return;
+      refreshing = true;
+      if (progressInterval) clearInterval(progressInterval);
+      setLoadingMessage('再起動中...');
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, [autoUpdate]);
+
+  const handleCheckUpdateManually = async () => {
+    if (!('serviceWorker' in navigator)) {
+      setDialogTitle('アップデートの確認');
+      setDialogMessage('お使いの環境はPWAアップデートに対応していません。');
+      setDialogOpen(true);
+      return;
+    }
+
+    setIsCheckingUpdate(true);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.update();
+
+      // Wait a brief moment for update found to trigger or detect waiting
+      setTimeout(() => {
+        setIsCheckingUpdate(false);
+        if (registration.waiting) {
+          setUpdateRegistration(registration);
+          setDialogTitle('アップデートの確認');
+          setDialogMessage('新しい更新が見つかりました。手動でアップデートを実行します。');
+          setDialogOpen(true);
+        } else {
+          setDialogTitle('アップデートの確認');
+          setDialogMessage('現在、縁側は最新の状態（' + releaseNotes.version + '）です。');
+          setDialogOpen(true);
+        }
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setIsCheckingUpdate(false);
+      setDialogTitle('エラー');
+      setDialogMessage('アップデートの確認に失敗しました。時間をおいて再度お試しください。');
+      setDialogOpen(true);
+    }
+  };
+
+  const handleApplyManualUpdate = () => {
+    if (updateRegistration && updateRegistration.waiting) {
+      setIsApplyingUpdate(true);
+      setLoadingMessage('最新のファイルを適用中...');
+
+      let step = 1;
+      const progressInterval = setInterval(() => {
+        if (step === 1) {
+          setLoadingMessage('古いファイルを整理しています (25%)...');
+        } else if (step === 2) {
+          setLoadingMessage('新しいお庭を整えています (60%)...');
+        } else if (step === 3) {
+          setLoadingMessage('仕上げを行っています (90%)...');
+        } else {
+          clearInterval(progressInterval);
+          setLoadingMessage('まもなく再起動します...');
+          window.location.reload();
+        }
+        step++;
+      }, 800);
+
+      updateRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
+  const handleUpdateEventDate = async () => {
+    if (!selectedDetailEvent || !editEventDate || !userProfile?.activeFamilyId) return;
+
+    try {
+      const familyId = userProfile.activeFamilyId;
+      const eventRef = ref(database, `calendarEvents/${familyId}/${selectedDetailEvent.id}`);
+      
+      await set(eventRef, {
+        ...selectedDetailEvent,
+        date: editEventDate
+      });
+
+      setIsEventDetailOpen(false);
+      setDialogTitle('日付の変更');
+      setDialogMessage('予定の日付を変更しました！');
+      setDialogOpen(true);
+    } catch (err) {
+      console.error(err);
+      setDialogTitle('エラー');
+      setDialogMessage('日付の変更に失敗しました。');
+      setDialogOpen(true);
+    }
+  };
+
+  const handleToggleAutoUpdate = (checked: boolean) => {
+    setAutoUpdate(checked);
+    localStorage.setItem('engawa_auto_update', String(checked));
+  };
+
   const [activeTab, setActiveTab] = useState<'home' | 'calendar' | 'settings'>('home');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalTab, setCreateModalTab] = useState<'post' | 'poll' | 'event'>('post');
@@ -66,6 +254,7 @@ export const HomePage: React.FC = () => {
   // Event Detail Dialog States
   const [selectedDetailEvent, setSelectedDetailEvent] = useState<CalendarEvent | null>(null);
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
+  const [editEventDate, setEditEventDate] = useState('');
 
   // Unread posts and in-app Notification States
   const [readPosts, setReadPosts] = useState<Record<string, number>>({});
@@ -73,6 +262,12 @@ export const HomePage: React.FC = () => {
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
 
   const unreadNotifCount = Object.values(notifications).filter(n => !n.read).length;
+
+  useEffect(() => {
+    if (selectedDetailEvent) {
+      setEditEventDate(selectedDetailEvent.date);
+    }
+  }, [selectedDetailEvent]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -84,6 +279,40 @@ export const HomePage: React.FC = () => {
       return;
     }
   }, [currentUser, userProfile]);
+
+  // Listen for unlinked eventId in query parameters for direct detail modal opening
+  useEffect(() => {
+    if (!currentUser || !userProfile?.activeFamilyId) return;
+
+    const parseAndOpenEvent = async () => {
+      const hash = window.location.hash;
+      const queryIdx = hash.indexOf('?');
+      if (queryIdx !== -1) {
+        const params = new URLSearchParams(hash.substring(queryIdx));
+        const eventId = params.get('eventId');
+        if (eventId) {
+          try {
+            const familyId = userProfile.activeFamilyId;
+            const eventSnapshot = await get(ref(database, `calendarEvents/${familyId}/${eventId}`));
+            if (eventSnapshot.exists()) {
+              const eventData = eventSnapshot.val() as CalendarEvent;
+              setSelectedDetailEvent(eventData);
+              setIsEventDetailOpen(true);
+              setActiveTab('calendar'); // Switch to calendar tab so they see it in context!
+              
+              // Clear the eventId query parameter from hash so it doesn't reopen on every mount/hash change
+              const cleanHash = hash.substring(0, queryIdx);
+              navigate(cleanHash, { replace: true });
+            }
+          } catch (err) {
+            console.error("Failed to parse and open unlinked event:", err);
+          }
+        }
+      }
+    };
+
+    parseAndOpenEvent();
+  }, [currentUser, userProfile?.activeFamilyId, window.location.hash, navigate]);
 
   useEffect(() => {
     if (!userProfile?.activeFamilyId || !currentUser) return;
@@ -242,14 +471,111 @@ export const HomePage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  // Calendar Helper: Get events of selected date
-  const selectedDateEvents = events.filter((ev) => ev.date === selectedDate);
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  // Calendar Grid Generator
-  const renderCalendarGrid = () => {
+  // Filter events that are today or in the future
+  const futureEvents = events
+    .filter((ev) => ev.date >= todayStr)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.startTime || '').localeCompare(b.startTime || '');
+    });
+
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
+    // Find the first event on or after selected date
+    const targetEvent = futureEvents.find((ev) => ev.date >= dateString);
+    if (targetEvent) {
+      const el = document.getElementById(`event-card-${targetEvent.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  };
+
+  // Advanced Pre-rendered Multi-Month Carousel Touch Swiping Logic
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionIndex, setTransitionIndex] = useState(0); // -1: prev, 0: current, 1: next
+
+  const goToPrevMonth = () => {
+    if (isTransitioning) return;
+    setTransitionIndex(-1);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+      setTransitionIndex(0);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const goToNextMonth = () => {
+    if (isTransitioning) return;
+    setTransitionIndex(1);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+      setTransitionIndex(0);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isTransitioning) return;
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping || touchStart === null) return;
+    const currentX = e.targetTouches[0].clientX;
+    const diff = currentX - touchStart;
+    // Compress movement slightly for fluid visual damping
+    setSwipeOffset(diff);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping || touchStart === null) return;
+    setIsSwiping(false);
+
+    const threshold = 60; // swipe threshold in pixels
+    if (swipeOffset > threshold) {
+      // Swipe right -> Prev Month
+      setTransitionIndex(-1);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+        setTransitionIndex(0);
+        setIsTransitioning(false);
+      }, 300);
+    } else if (swipeOffset < -threshold) {
+      // Swipe left -> Next Month
+      setTransitionIndex(1);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+        setTransitionIndex(0);
+        setIsTransitioning(false);
+      }, 300);
+    } else {
+      // Bounce back to middle
+      setTransitionIndex(0);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    }
+    setSwipeOffset(0);
+    setTouchStart(null);
+  };
+
+  // Calendar Grid Generator for Specific Base Date
+  const renderCalendarGridForDate = (baseDate: Date) => {
     const today = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth(); // Active Month (0-11)
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth(); // Active Month (0-11)
     
     // Days in current month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -259,7 +585,7 @@ export const HomePage: React.FC = () => {
     const days = [];
     // Blank spots for days of previous month
     for (let i = 0; i < firstDayIndex; i++) {
-      days.push(<div key={`blank-${i}`} className="h-10 w-10"></div>);
+      days.push(<div key={`blank-${i}`} className="h-8 w-8"></div>);
     }
 
     // Days of current month
@@ -272,8 +598,8 @@ export const HomePage: React.FC = () => {
       days.push(
         <button
           key={day}
-          onClick={() => setSelectedDate(dateString)}
-          className={`h-9 w-9 rounded-full flex flex-col items-center justify-center relative text-xs font-bold transition-all ${
+          onClick={() => handleDateSelect(dateString)}
+          className={`h-8 w-8 rounded-full flex flex-col items-center justify-center relative text-xs font-bold transition-all ${
             isSelected 
               ? 'bg-engawa-600 text-white shadow shadow-engawa-600/30 scale-105' 
               : isToday
@@ -292,8 +618,16 @@ export const HomePage: React.FC = () => {
     return days;
   };
 
+  if (isApplyingUpdate) {
+    return <LoadingScreen message={loadingMessage} />;
+  }
+
+  if (!family) {
+    return <LoadingScreen message="庭をひらいています..." />;
+  }
+
   return (
-    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
+    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-0 max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* Elegant Washi / Shoji Header */}
@@ -310,7 +644,7 @@ export const HomePage: React.FC = () => {
             <h1 className="text-base font-extrabold tracking-widest text-engawa-800 font-soft flex items-center gap-1">
               <span>縁側</span>
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
-              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">v1.38</span>
+              <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">{releaseNotes.version}</span>
             </h1>
             <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
               {family ? `${family.name}` : '読み込み中...'}
@@ -547,14 +881,16 @@ export const HomePage: React.FC = () => {
 
         {/* SUBVIEW B: CALENDAR */}
         {activeTab === 'calendar' && (
-          <div className="flex flex-col gap-4 animate-gentleSlideUp">
+          <div className="flex-1 flex flex-col gap-3.5 animate-gentleSlideUp min-h-0 overflow-hidden">
             
-            {/* Elegant Calendar Card */}
-            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-4">
+            {/* Elegant Calendar Card with Smooth Pre-rendered Horizontal Swipe Carousel */}
+            <div 
+              className="glass-card rounded-2xl p-3 shadow-sm flex flex-col gap-2.5 select-none touch-pan-y shrink-0 overflow-hidden"
+            >
               <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                    onClick={goToPrevMonth}
                     className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
                   >
                     ←
@@ -563,7 +899,7 @@ export const HomePage: React.FC = () => {
                     {currentDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
                   </h3>
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                    onClick={goToNextMonth}
                     className="text-xs font-black hover:text-engawa-600 bg-white/40 border border-white/50 w-6 h-6 flex items-center justify-center rounded-lg transition-all shadow-sm"
                   >
                     →
@@ -573,7 +909,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Day of Week Headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-wood-900/75">
+              <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold text-wood-900/75">
                 <span className="text-red-400">日</span>
                 <span>月</span>
                 <span>火</span>
@@ -583,17 +919,45 @@ export const HomePage: React.FC = () => {
                 <span className="text-blue-400">土</span>
               </div>
 
-              {/* Days Grid */}
-              <div className="grid grid-cols-7 gap-1.5 justify-items-center">
-                {renderCalendarGrid()}
+              {/* Sliding Carousel Wrapper */}
+              <div 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="w-full overflow-hidden touch-pan-y"
+              >
+                <div 
+                  className="flex flex-row w-[300%]"
+                  style={{
+                    transform: isSwiping
+                      ? `translateX(calc(-33.3333% + ${swipeOffset}px))`
+                      : `translateX(${-33.3333 - (transitionIndex * 33.3333)}%)`,
+                    transition: isSwiping || !isTransitioning ? 'none' : 'transform 300ms ease-out'
+                  }}
+                >
+                  {/* Prev Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                  </div>
+
+                  {/* Current Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(currentDate)}
+                  </div>
+
+                  {/* Next Month Grid */}
+                  <div className="w-1/3 grid grid-cols-7 gap-1 justify-items-center shrink-0">
+                    {renderCalendarGridForDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Event Agenda Card for Selected Date */}
-            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
-              <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
+            {/* Flat Event Agenda List */}
+            <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden px-1">
+              <div className="flex items-center justify-between pb-1 shrink-0">
                 <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">
-                  {selectedDate.replace('-', '年').replace('-', '月') + '日'} の予定
+                  これからの予定
                 </h3>
                 <button
                   onClick={() => {
@@ -607,16 +971,18 @@ export const HomePage: React.FC = () => {
                 </button>
               </div>
 
-              {selectedDateEvents.length === 0 ? (
-                <p className="text-xs text-wood-900/75 font-bold py-4 text-center">この日の予定はありません。</p>
+              {futureEvents.length === 0 ? (
+                <p className="text-xs text-wood-900/75 font-bold py-4 text-center">予定はありません。</p>
               ) : (
-                <div className="flex flex-col gap-3">
-                  {selectedDateEvents.map((ev) => {
+                <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 pb-4 hide-scrollbar">
+                  {futureEvents.map((ev) => {
                     const attendeeIds = Object.keys(ev.attendees || {}).filter(uid => ev.attendees?.[uid] === true);
-                    
+                    const isSelectedDate = ev.date === selectedDate;
+
                     return (
                       <div
                         key={ev.id}
+                        id={`event-card-${ev.id}`}
                         onClick={() => {
                           if (ev.linkedPostId) {
                             navigate(`/post/${ev.linkedPostId}`);
@@ -625,15 +991,24 @@ export const HomePage: React.FC = () => {
                             setIsEventDetailOpen(true);
                           }
                         }}
-                        className="p-3 rounded-2xl border border-white/45 bg-white/30 text-left cursor-pointer hover:bg-white/55 transition-all active:scale-[0.99]"
+                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all active:scale-[0.99] shadow-sm ${
+                          isSelectedDate
+                            ? 'bg-engawa-600/15 border-engawa-500/50 ring-1 ring-engawa-500/30'
+                            : 'bg-white/50 border-white/50 hover:bg-white/70'
+                        }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-extrabold text-engawa-800">{decryptText(ev.title)}</h4>
+                          <span className="text-[10px] font-bold text-wood-900/55 bg-white/50 px-2 py-0.5 rounded-md border border-white/30">
+                            {ev.date.replace('-', '年').replace('-', '月') + '日'}
+                          </span>
                           {ev.startTime && (
                             <span className="text-[9px] font-bold bg-white/60 border border-white/50 text-engawa-600 px-2 py-0.5 rounded-md">
                               {ev.startTime} {ev.endTime ? `~ ${ev.endTime}` : ''}
                             </span>
                           )}
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <h4 className="text-xs font-extrabold text-engawa-800">{decryptText(ev.title)}</h4>
                         </div>
                         {ev.description && (
                           <p className="text-[11px] text-wood-900/90 mt-1 line-clamp-2">{decryptText(ev.description)}</p>
@@ -765,6 +1140,70 @@ export const HomePage: React.FC = () => {
               <p className="text-[10px] text-wood-900/75 leading-relaxed px-1 font-medium text-center">
                 スレッド本文やチャット、お知らせ履歴などの文字サイズが変更されます
               </p>
+            </div>
+
+            {/* App Update (PWA) Settings */}
+            <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <div className="text-engawa-600">
+                  <LeafIcon size={18} />
+                </div>
+                <h3 className="text-xs font-extrabold text-engawa-800 tracking-wider">アプリの更新 (PWA)</h3>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {/* Auto Update Toggle */}
+                <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-wood-900/80">自動アップデート</span>
+                    <span className="text-[10px] text-wood-900/75 font-medium">
+                      新バージョン検出時に強制的に更新します
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleToggleAutoUpdate(!autoUpdate)}
+                    className={`w-11 h-6 rounded-full transition-all duration-300 relative border flex items-center p-0.5 ${
+                      autoUpdate
+                        ? 'bg-engawa-600 border-engawa-500/20 justify-end'
+                        : 'bg-wood-900/10 border-wood-900/10 justify-start'
+                    }`}
+                  >
+                    <span className="w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300" />
+                  </button>
+                </div>
+
+                {/* Manual Update Check */}
+                <div className="flex items-center justify-between bg-white/25 p-3.5 rounded-2xl border border-white/30">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-wood-900/80">手動で更新を検証</span>
+                    <span className="text-[10px] text-wood-900/75 font-medium">
+                      最新の更新情報をお庭に探しにいきます
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleCheckUpdateManually}
+                    disabled={isCheckingUpdate}
+                    className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 disabled:bg-engawa-600/50 px-3.5 py-2 rounded-xl shadow shadow-engawa-600/10 transition-all active:scale-95"
+                  >
+                    {isCheckingUpdate ? '確認中...' : '更新を確認'}
+                  </button>
+                </div>
+
+                {/* Apply Manual Update Button (if waiting worker is found) */}
+                {updateRegistration?.waiting && (
+                  <div className="flex flex-col gap-2 p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl mt-1 text-center animate-pulse">
+                    <span className="text-[10px] text-amber-800 font-extrabold">
+                      新しいアップデートが利用可能です！
+                    </span>
+                    <button
+                      onClick={handleApplyManualUpdate}
+                      className="text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 py-2 rounded-xl transition-all"
+                    >
+                      今すぐアップデートを適用
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Family Members List */}
@@ -1034,12 +1473,12 @@ export const HomePage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop with Blur */}
           <div 
-            className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-gentleFadeIn" 
+            className="absolute inset-0 bg-wood-900/25 backdrop-blur-md animate-gentleFadeIn" 
             onClick={() => setIsEventDetailOpen(false)} 
           />
           
           {/* Detailed Dialog Box */}
-          <div className="relative z-10 w-full max-w-[310px] glass-card rounded-2xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
+          <div className="relative z-10 w-full max-w-[310px] bg-white/85 backdrop-blur-lg border border-white/60 shadow-2xl rounded-3xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
               <h3 className="text-sm font-extrabold text-engawa-800 tracking-wider font-soft">予定の詳細</h3>
@@ -1054,7 +1493,7 @@ export const HomePage: React.FC = () => {
             {/* Event Info */}
             <div className="flex flex-col gap-2.5">
               <div>
-                <h4 className="text-base font-extrabold text-engawa-800">{selectedDetailEvent.title}</h4>
+                <h4 className="text-base font-extrabold text-engawa-800">{decryptText(selectedDetailEvent.title)}</h4>
                 <p className="text-xs text-wood-900/80 font-bold mt-1">
                   📅 {selectedDetailEvent.date}
                   {selectedDetailEvent.startTime ? ` | ⏰ ${selectedDetailEvent.startTime}${selectedDetailEvent.endTime ? ` ~ ${selectedDetailEvent.endTime}` : ''}` : ' | ⏰ 終日'}
@@ -1062,15 +1501,15 @@ export const HomePage: React.FC = () => {
               </div>
 
               {selectedDetailEvent.description && (
-                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/20 p-3 rounded-xl border border-white/30 whitespace-pre-line">
-                  {selectedDetailEvent.description}
+                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line">
+                  {decryptText(selectedDetailEvent.description)}
                 </p>
               )}
 
               {/* Attendees list */}
               <div className="flex flex-col gap-1.5 mt-1">
                 <label className="text-[10px] font-bold text-engawa-800 tracking-wider">参加メンバー</label>
-                <div className="flex flex-col gap-2 bg-white/10 p-2.5 rounded-xl border border-white/20">
+                <div className="flex flex-col gap-2 bg-white/30 p-2.5 rounded-xl border border-white/35">
                   {(() => {
                     const attendeesMap = selectedDetailEvent.attendees || {};
                     const attendeeUids = Object.keys(attendeesMap).filter(uid => attendeesMap[uid] === true);
@@ -1098,6 +1537,27 @@ export const HomePage: React.FC = () => {
                   })()}
                 </div>
               </div>
+
+              {/* Edit Date Section (visible to creator of the event) */}
+              {currentUser && currentUser.uid === selectedDetailEvent.authorId && (
+                <div className="flex flex-col gap-1.5 border-t border-wood-900/5 pt-3">
+                  <label className="text-[10px] font-bold text-engawa-800 tracking-wider">日付を変更する</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="date"
+                      value={editEventDate}
+                      onChange={(e) => setEditEventDate(e.target.value)}
+                      className="flex-1 glass-input rounded-xl px-2.5 py-1.5 text-xs text-wood-900 shadow-sm border border-wood-900/10 h-8"
+                    />
+                    <button
+                      onClick={handleUpdateEventDate}
+                      className="text-[10px] font-bold text-white bg-engawa-600 hover:bg-engawa-700 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all h-8 flex items-center justify-center"
+                    >
+                      変更
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Attendance Toggle Button */}
@@ -1148,6 +1608,12 @@ export const HomePage: React.FC = () => {
         title={dialogTitle}
         message={dialogMessage}
         onClose={() => setDialogOpen(false)}
+      />
+
+      {/* Dynamic Release Note Dialog Pop-up */}
+      <ReleaseNoteModal
+        isOpen={isReleaseNoteOpen}
+        onClose={handleCloseReleaseNote}
       />
     </div>
   );

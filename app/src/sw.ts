@@ -76,3 +76,10 @@ self.addEventListener('notificationclick', (event: any) => {
     })
   );
 });
+
+// Skip waiting on demand (enables instant PWA version update activation)
+self.addEventListener('message', (event: any) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

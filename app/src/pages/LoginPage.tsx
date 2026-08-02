@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signInWithPopup 
+  signInWithCredential,
+  GoogleAuthProvider,
+  sendPasswordResetEmail
 } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase';
+import { auth } from '../firebase';
 import { LeafBackground } from '../components/LeafBackground';
 import { HomeIcon } from '../components/Icons';
+
+declare const google: any;
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +20,35 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+    setResetLoading(true);
+
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetSuccess('パスワード再設定用のメールを送信しました。メールボックスをご確認ください。');
+    } catch (err) {
+      const firebaseError = err as { code?: string };
+      console.error(firebaseError);
+      if (firebaseError.code === 'auth/invalid-email') {
+        setResetError('有効なメールアドレスを入力してください。');
+      } else if (firebaseError.code === 'auth/user-not-found') {
+        setResetError('このメールアドレスは登録されていません。');
+      } else {
+        setResetError('エラーが発生しました。メールアドレスを確認してもう一度お試しください。');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,16 +78,63 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setError('');
+
+    if (typeof google === 'undefined') {
+      setError('Google認証ライブラリを読み込み中です。少々お待ちください。');
+      return;
+    }
+
     setLoading(true);
+
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate('/setup-family');
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId || clientId === 'your-google-client-id.apps.googleusercontent.com') {
+        throw new Error('Google Client ID is not configured.');
+      }
+
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'openid email profile',
+        callback: async (response: any) => {
+          if (response.error) {
+            console.error('Google token error:', response.error);
+            setError('Googleログインに失敗しました。');
+            setLoading(false);
+            return;
+          }
+
+          if (response.access_token) {
+            try {
+              const credential = GoogleAuthProvider.credential(null, response.access_token);
+              await signInWithCredential(auth, credential);
+              navigate('/setup-family');
+            } catch (authErr: any) {
+              console.error('Firebase sign-in error:', authErr);
+              setError('Firebaseのログイン認証に失敗しました。');
+            } finally {
+              setLoading(false);
+            }
+          } else {
+            setLoading(false);
+          }
+        },
+        error_callback: (err: any) => {
+          console.error('GSI client error:', err);
+          setError('Googleログイン中にエラーが発生しました。');
+          setLoading(false);
+        }
+      });
+
+      client.requestAccessToken();
     } catch (err: any) {
-      console.error(err);
-      setError('Googleログインに失敗しました。');
-    } finally {
+      console.error('Google Auth Init error:', err);
+      if (err.message && err.message.includes('Client ID')) {
+        setError('Googleログインが設定されていません（クライアントID未設定）。');
+      } else {
+        setError('Googleログインの開始に失敗しました。');
+      }
       setLoading(false);
     }
   };
@@ -97,7 +177,23 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-engawa-800 tracking-wider">パスワード</label>
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-engawa-800 tracking-wider">パスワード</label>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetEmail(email);
+                    setResetError('');
+                    setResetSuccess('');
+                    setIsResetModalOpen(true);
+                  }}
+                  className="text-[10px] font-bold text-engawa-600 hover:underline hover:text-engawa-700 transition-colors"
+                >
+                  パスワードを忘れた方
+                </button>
+              )}
+            </div>
             <input
               type="password"
               required
@@ -162,6 +258,83 @@ export const LoginPage: React.FC = () => {
           </button>
         </p>
       </div>
+
+      {/* Password Reset Modal */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Dynamic Backdrop */}
+          <div 
+            className="absolute inset-0 bg-wood-900/15 backdrop-blur-xs animate-gentleFadeIn" 
+            onClick={() => {
+              if (!resetLoading) setIsResetModalOpen(false);
+            }} 
+          />
+
+          {/* Elegant Glassmorphic Box */}
+          <div className="relative z-10 w-full max-w-[340px] bg-white/85 backdrop-blur-lg border border-white/40 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 animate-gentleScaleIn">
+            <h3 className="text-base font-extrabold text-engawa-800 tracking-wider font-soft text-center mt-1">
+              パスワードの再設定
+            </h3>
+            
+            {resetSuccess ? (
+              <div className="flex flex-col gap-4 text-center py-2">
+                <div className="bg-engawa-50/70 backdrop-blur border border-engawa-200/50 text-engawa-800 text-xs px-4 py-3 rounded-2xl leading-relaxed">
+                  {resetSuccess}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsResetModalOpen(false)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-engawa-600 hover:bg-engawa-700 text-white text-xs font-bold tracking-wider shadow transition-all font-soft active:scale-95"
+                >
+                  閉じる
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handlePasswordReset} className="flex flex-col gap-4">
+                <p className="text-xs text-wood-900/70 leading-relaxed font-medium">
+                  ご登録済みのメールアドレスを入力してください。パスワード再設定用のメールを送信します。
+                </p>
+
+                {resetError && (
+                  <div className="bg-red-50/70 backdrop-blur border border-red-200/50 text-red-800 text-xs px-4 py-2.5 rounded-xl">
+                    {resetError}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-engawa-800 tracking-wider">メールアドレス</label>
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="example@family.com"
+                    className="glass-input rounded-xl px-4 py-2.5 text-sm text-wood-900 placeholder:text-wood-900/30"
+                  />
+                </div>
+
+                <div className="flex gap-2.5 justify-end mt-2">
+                  <button
+                    type="button"
+                    disabled={resetLoading}
+                    onClick={() => setIsResetModalOpen(false)}
+                    className="text-xs font-bold text-wood-900/40 hover:text-wood-900/60 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="text-xs font-bold text-white bg-engawa-600 hover:bg-engawa-700 disabled:opacity-50 px-5 py-2 rounded-xl shadow shadow-engawa-600/10 hover:shadow-engawa-600/25 transition-all active:scale-95 font-soft"
+                  >
+                    {resetLoading ? '送信中...' : '送信する'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,17 +7,14 @@ import { SetupFamilyPage } from './pages/SetupFamilyPage';
 import { HomePage } from './pages/HomePage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { usePushNotifications } from './hooks/usePushNotifications';
+import { LoadingScreen } from './components/LoadingScreen';
 
 // Protected Route Wrapper for general authentication
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-wood-100 text-engawa-800 font-bold font-soft">
-        庭の手入れをしています...
-      </div>
-    );
+    return <LoadingScreen message="庭の手入れをしています..." />;
   }
 
   if (!currentUser) {

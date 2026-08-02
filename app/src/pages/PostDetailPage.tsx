@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../components/Icons';
 import { Dialog } from '../components/Dialog';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { encryptText, decryptText } from '../utils/crypto';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
@@ -29,6 +30,7 @@ export const PostDetailPage: React.FC = () => {
   const [linkedEvent, setLinkedEvent] = useState<CalendarEvent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [postLoading, setPostLoading] = useState(true);
+  const [isResolvingWorkspace, setIsResolvingWorkspace] = useState(true);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [familyMembers, setFamilyMembers] = useState<Record<string, UserProfile>>({});
   
@@ -59,6 +61,7 @@ export const PostDetailPage: React.FC = () => {
   const [eventDesc, setEventDesc] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,11 +73,13 @@ export const PostDetailPage: React.FC = () => {
 
     const resolvePostFamily = async () => {
       try {
+        setIsResolvingWorkspace(true);
         const familyIds = Object.keys(userProfile.families || {});
         
         // 1. If the post exists under the currently active family, we are already in the correct workspace!
         const activePostSnap = await get(ref(database, `posts/${userProfile.activeFamilyId}/${postId}`));
         if (activePostSnap.exists()) {
+          setIsResolvingWorkspace(false);
           return;
         }
 
@@ -89,8 +94,12 @@ export const PostDetailPage: React.FC = () => {
             return;
           }
         }
+
+        // Not found anywhere (deleted or wrong link)
+        setIsResolvingWorkspace(false);
       } catch (err) {
         console.error("Failed to resolve post family for dynamic switching:", err);
+        setIsResolvingWorkspace(false);
       }
     };
 
@@ -102,8 +111,10 @@ export const PostDetailPage: React.FC = () => {
       navigate('/login');
       return;
     }
+    if (isResolvingWorkspace) return;
     if (!postId || !userProfile?.activeFamilyId) return;
 
+    setPostLoading(true);
     const familyId = userProfile.activeFamilyId;
 
     // Record the user has read this post (clears unread state)
@@ -189,17 +200,18 @@ export const PostDetailPage: React.FC = () => {
       off(messagesRef);
       off(reactionsRef);
     };
-  }, [postId, userProfile?.activeFamilyId]);
+  }, [postId, userProfile?.activeFamilyId, isResolvingWorkspace]);
 
   // Deep-linking scroll to message and highlight
   useEffect(() => {
-    if (!postLoading && messages.length > 0) {
+    if (!postLoading && messages.length > 0 && !hasScrolledRef.current) {
       const hash = window.location.hash;
       const queryIdx = hash.indexOf('?');
       if (queryIdx !== -1) {
         const params = new URLSearchParams(hash.substring(queryIdx));
         const targetMsgId = params.get('msgId');
         if (targetMsgId) {
+          hasScrolledRef.current = true;
           setHighlightedMsgId(targetMsgId);
           setTimeout(() => {
             const el = document.getElementById(`msg-${targetMsgId}`);
@@ -380,6 +392,17 @@ export const PostDetailPage: React.FC = () => {
     setDialogOpen(true);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // If Enter is pressed without Shift, submit the form (on desktop)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser || !userProfile?.activeFamilyId || !post || !postId) return;
@@ -387,19 +410,38 @@ export const PostDetailPage: React.FC = () => {
     try {
       const familyId = userProfile.activeFamilyId;
 
+      // Extract mentions
+      const mentionedUids: string[] = [];
+      const mentionRegex = /@([^\s@]+)/g;
+      let match;
+      while ((match = mentionRegex.exec(newMessage)) !== null) {
+        const username = match[1];
+        const foundMember = Object.entries(familyMembers).find(
+          ([, profile]) => profile.name === username
+        );
+        if (foundMember) {
+          mentionedUids.push(foundMember[0]);
+        }
+      }
+
       // 1. Update post metadata (replyCount, lastReplyAt) and participants
       const replyCount = (post.replyCount || 0) + 1;
       const lastReplyAt = Date.now();
       
+      const newParticipants = {
+        ...(post.participants || {}),
+        [currentUser.uid]: true
+      };
+      for (const uid of mentionedUids) {
+        newParticipants[uid] = true;
+      }
+
       const postUpdateRef = ref(database, `posts/${familyId}/${postId}`);
       await set(postUpdateRef, {
         ...post,
         replyCount,
         lastReplyAt,
-        participants: {
-          ...(post.participants || {}),
-          [currentUser.uid]: true
-        }
+        participants: newParticipants
       });
 
       // 2. Write the message
@@ -417,10 +459,9 @@ export const PostDetailPage: React.FC = () => {
 
       // 3. Trigger Notification for participating members only
       const targetUids: Record<string, boolean> = {};
-      const currentParticipants = post.participants || {};
 
       // Send to all current participants EXCEPT the sender
-      for (const uid in currentParticipants) {
+      for (const uid in newParticipants) {
         if (uid !== currentUser.uid) {
           targetUids[uid] = true;
         }
@@ -481,64 +522,8 @@ export const PostDetailPage: React.FC = () => {
     }
   };
 
-  if (postLoading) {
-    return (
-      <div className="relative h-screen overflow-hidden pt-4 px-4 pb-20 max-w-md mx-auto flex flex-col gap-4 animate-gentleFadeIn">
-        <LeafBackground />
-        
-        {/* Skeleton Master Card */}
-        <div className="relative z-10 glass-card rounded-3xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
-          
-          {/* Skeleton Post Header */}
-          <div className="p-5 flex flex-col gap-4 shrink-0 bg-white/20 border-b border-wood-900/5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
-              <div className="flex flex-col gap-1.5 flex-1">
-                <div className="w-20 h-3 rounded skeleton-shimmer" />
-                <div className="w-28 h-2 rounded skeleton-shimmer" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 mt-1">
-              <div className="w-full h-4 rounded skeleton-shimmer" />
-              <div className="w-4/5 h-4 rounded skeleton-shimmer" />
-            </div>
-            <div className="flex border-t border-wood-900/5 pt-3 mt-1 justify-between">
-              <div className="w-20 h-3 rounded skeleton-shimmer" />
-              <div className="w-16 h-3 rounded skeleton-shimmer" />
-            </div>
-          </div>
-
-          {/* Skeleton Replies Container */}
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5 bg-white/5">
-            <div className="w-24 h-3 rounded skeleton-shimmer" />
-            
-            <div className="flex gap-2.5 items-start">
-              <div className="w-7 h-7 rounded-full skeleton-shimmer shrink-0" />
-              <div className="flex flex-col gap-1 flex-1">
-                <div className="w-16 h-2 rounded skeleton-shimmer" />
-                <div className="w-3/5 h-8 rounded-2xl skeleton-shimmer" />
-              </div>
-            </div>
-
-            <div className="flex gap-2.5 items-start flex-row-reverse">
-              <div className="w-7 h-7 rounded-full skeleton-shimmer shrink-0" />
-              <div className="flex flex-col gap-1 items-end flex-1">
-                <div className="w-16 h-2 rounded skeleton-shimmer" />
-                <div className="w-1/2 h-8 rounded-2xl skeleton-shimmer" />
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Skeleton Bottom Navigation bar */}
-        <div className="fixed bottom-4 left-4 right-4 z-40 max-w-md mx-auto flex gap-2 items-center">
-          <div className="w-12 h-12 rounded-full skeleton-shimmer shrink-0" />
-          <div className="flex-1 h-12 rounded-2xl skeleton-shimmer" />
-          <div className="w-12 h-12 rounded-full skeleton-shimmer shrink-0" />
-        </div>
-      </div>
-    );
+  if (isResolvingWorkspace || postLoading) {
+    return <LoadingScreen message="お便りを開いています..." />;
   }
 
   if (!post) {
@@ -559,7 +544,7 @@ export const PostDetailPage: React.FC = () => {
   const isPostAuthor = currentUser?.uid === post.authorId;
 
   return (
-    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
+    <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-0 max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
       <LeafBackground />
 
       {/* INTEGRATED MASTER SINGLE-CARD */}
@@ -623,7 +608,7 @@ export const PostDetailPage: React.FC = () => {
                   <span className="text-[8px] font-bold tracking-widest bg-engawa-100 text-engawa-700 px-2 py-0.5 rounded-md border border-engawa-500/10">
                     暦の予定
                   </span>
-                  <h3 className="text-xs font-extrabold text-engawa-800 truncate mt-0.5">{linkedEvent.title}</h3>
+                  <h3 className="text-xs font-extrabold text-engawa-800 truncate mt-0.5">{decryptText(linkedEvent.title)}</h3>
                   <p className="text-[9px] text-wood-900/90 font-bold mt-0.5">
                     時間: {linkedEvent.startTime ? `${linkedEvent.startTime}${linkedEvent.endTime ? ` ~ ${linkedEvent.endTime}` : ''}` : '終日'}
                   </p>
@@ -946,7 +931,7 @@ export const PostDetailPage: React.FC = () => {
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
                       <span className="text-xs font-bold text-wood-900/80 mb-0.5">{msgAuthor.name}</span>
-                      <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all transition-all duration-500 ${
+                      <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all whitespace-pre-wrap transition-all duration-500 ${
                         isHighlighted
                           ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'
                           : isMe 
@@ -969,7 +954,7 @@ export const PostDetailPage: React.FC = () => {
       </div>
 
       {/* ERGONOMIC BOTTOM composite navigation & reply inputs bar */}
-      <div className="relative w-full z-40 px-0 pt-2 pb-1 bg-transparent flex gap-2 items-center shrink-0">
+      <div className="relative w-full z-40 px-0 pt-2 pb-[calc(env(safe-area-inset-bottom)+4px)] bg-transparent flex gap-2 items-center shrink-0">
         {/* Thumb-reachable Circular Back Button */}
         <button
           onClick={() => navigate('/')}
@@ -981,13 +966,14 @@ export const PostDetailPage: React.FC = () => {
 
         {/* Message Compose Form */}
         <form onSubmit={handleSendMessage} className="flex-1 min-w-0 flex gap-2 items-center">
-          <input
-            type="text"
+          <textarea
             required
+            rows={2}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="返信を入力..."
-            className="flex-1 glass-input rounded-2xl px-4 py-3.5 text-base text-wood-900 placeholder:text-wood-900/30 shadow-md"
+            className="flex-1 glass-input rounded-2xl px-4 py-2 text-base text-wood-900 placeholder:text-wood-900/30 shadow-md resize-none h-[52px]"
           />
           <button
             type="submit"

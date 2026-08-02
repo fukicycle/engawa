@@ -1,75 +1,32 @@
-# React + TypeScript + Vite
+# 縁側 (Engawa)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+家族をつなぐ、静かな場所。
+和風の落ち着いたデザインを採用した、家族専用のクローズドなコミュニケーション＆カレンダー共有アプリケーションです。
 
-Currently, two official plugins are available:
+## 開発・リリース運用ルール (CRITICAL)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+このプロジェクトでは、アプリ内の**自動リリースノート生成機構**と連動しているため、コミットメッセージのプレフィックス（接頭辞）ルールを厳密に守る必要があります。
 
-## React Compiler
+### コミットメッセージのプレフィックス
+- `feat:` または `feat(app):` : ユーザーに見える**新機能の追加**。
+- `fix:` または `fix(app):` : ユーザーに見える**バグ修正**。
+- `internal:` または `chore:`, `refactor:`, `style:` : ユーザーには表示されない、内部の改善やリファクタリング、ビルド設定の変更など。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### リリースノートへの表示ルール
+`feat` と `fix` で始まるコミットメッセージのみが、自動的にアプリ内のリリースノート（ポップアップ）に抽出・表示されます。
+**そのため、`feat` と `fix` のコミットメッセージは、必ずユーザーが読んで分かりやすい「簡潔な日本語」で記述してください。**
 
-## Expanding the ESLint configuration
+*良い例:*
+- `feat: カレンダーを横スワイプでめくれる機能を追加しました`
+- `fix: 通知からチャットを開いた際に画面が勝手にスクロールする不具合を修正しました`
+- `internal: Update Vite configuration for PWA`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### デプロイとバージョンアップ
+このアプリの自動デプロイ（GitHub Actions）は、**GitのTagがプッシュされた時**にのみ発火します。
+バージョンを上げる際は、すべての変更を `main` にマージ（またはコミット）した後、以下の手順でTagを発行してプッシュしてください。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+git tag v0.7.6
+git push origin v0.7.6
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+これにより、自動的にデプロイが開始され、ユーザーの端末（PWA）に最新の更新が届きます。
