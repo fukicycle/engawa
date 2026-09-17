@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './pages/LandingPage';
@@ -7,14 +7,17 @@ import { SetupFamilyPage } from './pages/SetupFamilyPage';
 import { HomePage } from './pages/HomePage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { usePushNotifications } from './hooks/usePushNotifications';
-import { LoadingScreen } from './components/LoadingScreen';
+import { hideSplash } from './utils/splash';
 
 // Protected Route Wrapper for general authentication
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, loading } = useAuth();
 
+  // 認証の復元中は何も描画しない。
+  // index.html の起動スプラッシュがそのまま残るため、
+  // 「スプラッシュ → 全画面ローディング → 本体」という多段の切り替えが起きない。
   if (loading) {
-    return <LoadingScreen message="庭の手入れをしています..." />;
+    return null;
   }
 
   if (!currentUser) {
@@ -25,8 +28,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 export const AppContent: React.FC = () => {
+  const { loading } = useAuth();
+
   // Initialize push notification subscriptions when user is logged in
   usePushNotifications();
+
+  // 認証状態が確定した時点で、アプリ本体の描画と重ねてスプラッシュを閉じる
+  useEffect(() => {
+    if (!loading) {
+      hideSplash();
+    }
+  }, [loading]);
 
   return (
     <HashRouter>

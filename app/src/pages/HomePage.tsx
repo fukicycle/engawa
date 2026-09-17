@@ -622,9 +622,9 @@ export const HomePage: React.FC = () => {
     return <LoadingScreen message={loadingMessage} />;
   }
 
-  if (!family) {
-    return <LoadingScreen message="庭をひらいています..." />;
-  }
+  // 家族情報が届くまで全画面ローディングに落とさない。
+  // ヘッダーとボトムナビ（アプリシェル）は即座に描画し、
+  // 中身だけをスケルトンで埋めることでネイティブアプリの起動に近づける。
 
   return (
     <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-0 max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
@@ -646,9 +646,13 @@ export const HomePage: React.FC = () => {
               <span className="text-[9px] text-wood-900/30 group-hover:text-engawa-600 transition-colors">▼</span>
               <span className="text-[8px] font-mono font-medium text-wood-900/30 ml-1 select-none">{releaseNotes.version}</span>
             </h1>
-            <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
-              {family ? `${family.name}` : '読み込み中...'}
-            </p>
+            {family ? (
+              <p className="text-[10px] tracking-widest text-wood-900/80 font-bold truncate max-w-[120px]">
+                {family.name}
+              </p>
+            ) : (
+              <span className="block w-20 h-2.5 rounded skeleton-shimmer mt-1" />
+            )}
           </div>
         </div>
 
@@ -1505,7 +1509,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {selectedDetailEvent.description && (
-                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line break-words">
+                <p data-selectable className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line break-words">
                   {decryptText(selectedDetailEvent.description)}
                 </p>
               )}
