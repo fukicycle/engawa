@@ -25,11 +25,12 @@ export const Dialog: React.FC<DialogProps> = ({
       <div className="absolute inset-0 bg-wood-900/10 backdrop-blur-xs animate-fadeIn" onClick={onClose} />
 
       {/* Elegant Glassmorphic Dialog Box */}
-      <div className="relative z-10 w-full max-w-[280px] bg-white/15 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-center animate-scaleIn">
-        <h4 className="font-extrabold text-sm text-engawa-800 tracking-wider font-soft">{title}</h4>
-        <p className="text-xs text-wood-900/70 leading-relaxed font-medium break-all">{message}</p>
-        
-        <div className="flex gap-2.5 justify-center mt-1">
+      <div className="relative z-10 w-full max-w-[280px] max-h-[85dvh] bg-white/15 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-center animate-scaleIn">
+        <h4 className="shrink-0 font-extrabold text-sm text-engawa-800 tracking-wider font-soft">{title}</h4>
+        {/* 長文でも画面外にはみ出さず、メッセージ部分だけをスクロールさせる */}
+        <p data-selectable className="flex-1 min-h-0 overflow-y-auto hide-scrollbar text-xs text-wood-900/70 leading-relaxed font-medium break-words whitespace-pre-line">{message}</p>
+
+        <div className="shrink-0 flex gap-2.5 justify-center mt-1">
           {isConfirm ? (
             <>
               <button

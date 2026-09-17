@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { LeafBackground } from '../components/LeafBackground';
 import { ArrowLeftIcon, SendIcon, LeafIcon, EditIcon, TrashIcon } from '../components/Icons';
 import { Dialog } from '../components/Dialog';
-import { LoadingScreen } from '../components/LoadingScreen';
 import { encryptText, decryptText } from '../utils/crypto';
 import type { Post, Message, Reaction, UserProfile, CalendarEvent } from '../types';
 
@@ -523,7 +522,56 @@ export const PostDetailPage: React.FC = () => {
   };
 
   if (isResolvingWorkspace || postLoading) {
-    return <LoadingScreen message="お便りを開いています..." />;
+    // 全画面ローディングに覆わせず、実際のレイアウトと同じ骨格をすぐ描画する。
+    // 戻るボタンは最初から押せるので、ネイティブアプリの画面遷移に近い感覚になる。
+    return (
+      <div className="relative h-dvh overflow-hidden pt-4 px-4 pb-0 max-w-md mx-auto flex flex-col gap-3 animate-gentleSlideUp">
+        <LeafBackground />
+
+        <div className="relative z-10 glass-card rounded-2xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
+          {/* 投稿ヘッダーのスケルトン */}
+          <div className="p-5 flex flex-col gap-3.5 shrink-0 bg-white/20 border-b border-wood-900/5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
+              <div className="flex flex-col gap-1.5 flex-1">
+                <div className="w-24 h-3 rounded skeleton-shimmer" />
+                <div className="w-32 h-2 rounded skeleton-shimmer" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 mt-1">
+              <div className="w-full h-3.5 rounded skeleton-shimmer" />
+              <div className="w-4/5 h-3.5 rounded skeleton-shimmer" />
+            </div>
+          </div>
+
+          {/* やり取り一覧のスケルトン */}
+          <div className="flex-1 overflow-hidden p-5 flex flex-col gap-4 min-h-0 bg-white/5">
+            {[0, 1, 2].map((n) => (
+              <div key={n} className={`flex items-end gap-2 ${n % 2 === 1 ? 'flex-row-reverse' : ''}`}>
+                <div className="w-7 h-7 rounded-full skeleton-shimmer shrink-0" />
+                <div
+                  className="h-12 rounded-2xl skeleton-shimmer"
+                  style={{ width: n % 2 === 1 ? '50%' : '62%' }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 下部バーは本番と同じ位置に。戻るボタンは読み込み中でも機能する */}
+        <div className="relative w-full z-40 px-0 pt-2 pb-[calc(env(safe-area-inset-bottom)+4px)] bg-transparent flex gap-2 items-center shrink-0">
+          <button
+            onClick={() => navigate('/')}
+            className="w-12 h-12 rounded-full bg-white/50 hover:bg-white/80 border border-white/60 text-wood-900/70 flex items-center justify-center shadow-md transition-all shrink-0 active:scale-95"
+            title="戻る"
+          >
+            <ArrowLeftIcon size={20} />
+          </button>
+          <div className="flex-1 h-[52px] rounded-2xl skeleton-shimmer border border-white/40" />
+          <div className="w-12 h-12 rounded-full skeleton-shimmer shrink-0" />
+        </div>
+      </div>
+    );
   }
 
   if (!post) {
@@ -550,8 +598,13 @@ export const PostDetailPage: React.FC = () => {
       {/* INTEGRATED MASTER SINGLE-CARD */}
       <div className="relative z-10 glass-card rounded-2xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
         
-        {/* UPPER STATIC SECTION (POST DETAILS) */}
-        <div className="p-5 flex flex-col gap-3.5 shrink-0 bg-white/20 border-b border-wood-900/5">
+        {/*
+          UPPER SECTION (POST DETAILS)
+          本文・投票・リアクションが長くなってもカードからはみ出して切れないように、
+          高さの上限を設けてこのセクション自体をスクロール可能にする。
+          短い投稿では max-height に達しないため、従来どおり固定ヘッダーとして振る舞う。
+        */}
+        <div className="p-5 flex flex-col gap-3.5 shrink-0 max-h-[45dvh] overflow-y-auto hide-scrollbar bg-white/20 border-b border-wood-900/5">
           {/* Author Details and Edit/Delete controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -710,7 +763,7 @@ export const PostDetailPage: React.FC = () => {
               </div>
             </form>
           ) : (
-            <p className={`font-medium break-all whitespace-pre-line px-1 text-wood-900 ${getBodyTextClass(fontSize)}`}>
+            <p data-selectable className={`font-medium break-all whitespace-pre-line px-1 text-wood-900 ${getBodyTextClass(fontSize)}`}>
               {decryptText(post.content)}
             </p>
           )}
@@ -931,7 +984,7 @@ export const PostDetailPage: React.FC = () => {
                     />
                     <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : ''}`}>
                       <span className="text-xs font-bold text-wood-900/80 mb-0.5">{msgAuthor.name}</span>
-                      <div className={`p-3 rounded-2xl font-medium leading-relaxed break-all whitespace-pre-wrap transition-all duration-500 ${
+                      <div data-selectable className={`p-3 rounded-2xl font-medium leading-relaxed break-all whitespace-pre-wrap transition-all duration-500 ${
                         isHighlighted
                           ? 'bg-engawa-100 border border-engawa-500/40 text-engawa-800 ring-2 ring-engawa-600/20 scale-[1.02] shadow shadow-engawa-500/10'
                           : isMe 
