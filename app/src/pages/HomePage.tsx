@@ -1477,10 +1477,14 @@ export const HomePage: React.FC = () => {
             onClick={() => setIsEventDetailOpen(false)} 
           />
           
-          {/* Detailed Dialog Box */}
-          <div className="relative z-10 w-full max-w-[310px] bg-white/85 backdrop-blur-lg border border-white/60 shadow-2xl rounded-3xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
+          {/* 
+            Detailed Dialog Box
+            説明文が長い場合や参加メンバーが多い場合でも画面からはみ出して切れないよう、
+            高さに上限を設け、ヘッダーと参加ボタンは固定したまま中身だけをスクロールさせる。
+          */}
+          <div className="relative z-10 w-full max-w-[310px] max-h-[85dvh] bg-white/85 backdrop-blur-lg border border-white/60 shadow-2xl rounded-3xl p-5 flex flex-col gap-4 animate-gentleScaleIn">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-wood-900/5 pb-2">
+            <div className="shrink-0 flex items-center justify-between border-b border-wood-900/5 pb-2">
               <h3 className="text-sm font-extrabold text-engawa-800 tracking-wider font-soft">予定の詳細</h3>
               <button 
                 onClick={() => setIsEventDetailOpen(false)}
@@ -1490,8 +1494,8 @@ export const HomePage: React.FC = () => {
               </button>
             </div>
 
-            {/* Event Info */}
-            <div className="flex flex-col gap-2.5">
+            {/* Event Info (scrollable body) */}
+            <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col gap-2.5 -mx-1 px-1">
               <div>
                 <h4 className="text-base font-extrabold text-engawa-800">{decryptText(selectedDetailEvent.title)}</h4>
                 <p className="text-xs text-wood-900/80 font-bold mt-1">
@@ -1501,7 +1505,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {selectedDetailEvent.description && (
-                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line">
+                <p className="text-xs text-wood-900/95 leading-relaxed bg-white/40 p-3 rounded-xl border border-white/40 whitespace-pre-line break-words">
                   {decryptText(selectedDetailEvent.description)}
                 </p>
               )}
@@ -1587,7 +1591,7 @@ export const HomePage: React.FC = () => {
                       };
                     });
                   }}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all active:scale-95 border ${
+                  className={`w-full shrink-0 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all active:scale-95 border ${
                     isAttending
                       ? 'bg-red-500/10 border-red-500/20 text-red-700 hover:bg-red-500/15'
                       : 'bg-engawa-600 hover:bg-engawa-700 border-transparent text-white shadow shadow-engawa-600/15'

@@ -33,6 +33,27 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden; /* Lock viewport background scrolling */
+  /* 画面端まで引っ張った時の「ページ全体のラバーバンド／引っ張って更新」を抑止 */
+  overscroll-behavior: none;
+}
+
+/* 
+ * スクロール領域の共通クラス。
+ * これまで6箇所で指定されていたが定義が無く、無効なクラスになっていた。
+ * スクロールバーを隠しつつ、iOS の慣性スクロールを有効にし、
+ * 端まで到達した時にスクロールが親（＝画面全体）へ伝播しないようにする。
+ */
+.hide-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 旧 Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* Global Font Size Multipliers - dynamically scales EVERYTHING proportionally */

@@ -550,8 +550,13 @@ export const PostDetailPage: React.FC = () => {
       {/* INTEGRATED MASTER SINGLE-CARD */}
       <div className="relative z-10 glass-card rounded-2xl flex-1 flex flex-col overflow-hidden border border-white/40 shadow-xl min-h-0">
         
-        {/* UPPER STATIC SECTION (POST DETAILS) */}
-        <div className="p-5 flex flex-col gap-3.5 shrink-0 bg-white/20 border-b border-wood-900/5">
+        {/* 
+          UPPER SECTION (POST DETAILS)
+          本文・投票・リアクションが長くなってもカードからはみ出して切れないように、
+          高さの上限を設けてこのセクション自体をスクロール可能にする。
+          短い投稿では max-height に達しないため、従来どおり固定ヘッダーとして振る舞う。
+        */}
+        <div className="p-5 flex flex-col gap-3.5 shrink-0 max-h-[45dvh] overflow-y-auto hide-scrollbar bg-white/20 border-b border-wood-900/5">
           {/* Author Details and Edit/Delete controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
